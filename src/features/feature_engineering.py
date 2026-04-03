@@ -31,6 +31,16 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
 
     # 6. Employment stability
     df["low_employment_years"] = (df["employment_years"] < 2).astype(int)
+    # 7. Interaction: DTI × Utilization (compound risk)
+    df["dti_util_interaction"] = df["debt_to_income"] * df["credit_utilization"]
+
+    # 8. Ratio refinement: loan burden relative to income (already similar but stronger signal)
+    df["loan_income_ratio"] = df["loan_amount"] / (df["annual_income"] + 1e-6)
+
+    # 9. Flag: risky borrower (low score + high DTI)
+    df["risky_profile_flag"] = (
+                        (df["credit_score"] < 650) & (df["debt_to_income"] > 0.4)
+                        ).astype(int)
 
     return df
 

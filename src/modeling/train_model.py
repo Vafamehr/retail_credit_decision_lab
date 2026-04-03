@@ -1,24 +1,28 @@
 import pandas as pd
-from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-
+from src.decision.approval_policy import apply_approval_policy
+from src.evaluation.evaluate_model import evaluate_decisions
+from src.evaluation.calibration import calibration_table, print_calibration
 
 def load_data(path: str) -> pd.DataFrame:
     return pd.read_csv(path)
 
 
 def prepare_data(df: pd.DataFrame):
+    customer_ids = df["customer_id"].copy()
     y = df["default"]
+    
     X = df.drop(columns=["default", "customer_id"])
     X = pd.get_dummies(X, drop_first=True)
-    return X, y
+    return X, y, customer_ids, df["default"].mean()
 
 
-def train_model(X, y):
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
+def train_model(X, y, customer_ids):
+    X_train, X_test, y_train, y_test, _, id_test = train_test_split(
+        X, y, customer_ids, test_size=0.2, random_state=42, stratify=y
     )
 
     scaler = StandardScaler()
@@ -28,58 +32,49 @@ def train_model(X, y):
     model = LogisticRegression(max_iter=1000)
     model.fit(X_train_scaled, y_train)
 
-    # Model prediction: probability of default
     predicted_risk = model.predict_proba(X_test_scaled)[:, 1]
-
-    # Ground truth: what actually happened (0 = no default, 1 = default)
-    true_default = y_test.values
-
     auc = roc_auc_score(y_test, predicted_risk)
+
+    results = pd.DataFrame(
+        {
+            "customer_id": id_test.values,
+            "actual_default": y_test.values,
+            "predicted_risk": predicted_risk,
+        }
+    )
+
+    results = apply_approval_policy(results)
+
     print(f"\nAUC: {auc:.4f}")
 
-    # Overall default fraction across ALL test rows (baseline reality)
-    print(f"Overall Default Fraction (all test rows): {true_default.mean():.2%}")
+    evaluate_decisions(results)
 
-    thresholds = [0.3, 0.5, 0.7]
+    print("\n=== APPROVAL METRICS ===")
 
-    for t in thresholds:
-        # Select rows where predicted risk is below threshold
-        selected = predicted_risk < t
+    approved = results[results["decision"] == "approve"]
 
-        selected_count = selected.sum()
-        total_count = len(selected)
+    approval_rate = len(approved) / len(results)
+    default_rate_approved = approved["actual_default"].mean()
 
-        print("\n------------------------------")
-        print(f"Threshold: {t:.2f}")
+    print(f"Approval Rate: {approval_rate:.2%}")
+    print(f"Default Rate (Approved Only): {default_rate_approved:.2%}")
 
-        # Fraction of rows selected by this threshold
-        print(f"Selected Fraction: {selected_count}/{total_count} = {selected_count/total_count:.2%}")
 
-        if selected_count > 0:
-            # Average predicted default probability for selected rows
-            selected_predicted_fraction = predicted_risk[selected].mean()
+    calib = calibration_table(results, n_bins=5)
+    print_calibration(calib)
 
-            # Actual default rate (truth) for the same selected rows
-            selected_true_fraction = true_default[selected].mean()
+    print("\n--- SAMPLE SCORES ---")
+    print(results.head())
 
-            print(
-                f"Predicted Default Fraction (selected rows): "
-                f"{selected_predicted_fraction:.2%}"
-            )
-            print(
-                f"True Default Fraction (selected rows): "
-                f"{selected_true_fraction:.2%}"
-            )
-        else:
-            print("No rows selected")
+    return model, scaler, results
 
-    return model
 
 def main():
     path = "data/processed/loan_features.csv"
     df = load_data(path)
-    X, y = prepare_data(df)
-    train_model(X, y)
+    X, y, customer_ids, mean_default= prepare_data(df)
+    print(f"mean default is {mean_default}")
+    train_model(X, y, customer_ids)
 
 
 if __name__ == "__main__":

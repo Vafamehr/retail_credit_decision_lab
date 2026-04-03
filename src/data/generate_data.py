@@ -34,11 +34,21 @@ def generate_synthetic_loan_data(n=10000, random_state=42):
 
     # --- Risk score logic (THIS is the important part) ---
     risk_score = (
-        (700 - data["credit_score"]) * 0.003
-        + data["debt_to_income"] * 1.5
-        + data["credit_utilization"] * 1.2
-        + data["num_delinquencies"] * 0.5
-        - data["employment_years"] * 0.02
+        -2.2
+        + (700 - data["credit_score"]) * 0.0025
+        + data["debt_to_income"] * 1.2
+        + data["credit_utilization"] * 1.0
+        + data["num_delinquencies"] * 0.35
+        - data["employment_years"] * 0.015
+
+        # NEW: interaction effects
+        + 1.5 * (data["debt_to_income"] * data["credit_utilization"])
+
+        # NEW: threshold effect (non-linear)
+        + 1.0 * (data["credit_score"] < 600)
+
+        # NEW: extreme risk spike
+        + 1.2 * ((data["credit_utilization"] > 0.8) & (data["debt_to_income"] > 0.5))
     )
 
     # Convert to probability via sigmoid
