@@ -1,21 +1,25 @@
-# Credit Risk Data Generation — From Risk to Default
+# Credit Risk Data Generation — From Features to Outcomes
 
 ## Objective
-Simulate realistic borrower behavior where features translate into probability of default and then into observed outcomes.
 
-This mirrors how real-world credit data behaves.
+Simulate realistic credit data where borrower features generate:
 
----
+features → risk signal → probability of default → observed outcome
+
+This mirrors real-world credit behavior.
+
 
 ## System Flow
 
-features → risk score → probability → outcome
+Borrower Features  
+→ Risk Score  
+→ Probability of Default (PD)  
+→ Default Outcome  
 
----
 
 ## Step 1 — Risk Score
 
-We construct a risk score using borrower features such as:
+We construct a risk signal using borrower attributes and their interactions:
 
 - credit score  
 - debt-to-income ratio  
@@ -23,71 +27,61 @@ We construct a risk score using borrower features such as:
 - delinquencies  
 - employment length  
 
-The score represents overall borrower risk:
+The risk score is not purely linear. It includes:
 
-- higher score → higher risk  
-- lower score → safer borrower  
+- feature interactions (e.g., high utilization + low credit score)  
+- non-linear effects (e.g., sharp risk increase beyond certain thresholds)  
 
----
+This better reflects real-world credit behavior, where risk is rarely linear.
 
-## Step 2 — Probability of Default
 
-The risk score is converted into probability using a sigmoid function:
+## Step 2 — Probability Mapping
+
+The risk score is transformed into probability using a sigmoid function:
 
 P(default) = 1 / (1 + exp(-risk_score))
 
 This ensures:
 
-- values are between 0 and 1  
-- outputs are interpretable as probabilities  
-- higher risk → higher probability  
+- output is between 0 and 1  
+- interpretable as probability  
+- higher risk → higher PD  
 
----
 
-## Step 3 — Simulating Default
+## Step 3 — Outcome Simulation
 
 Default is generated using a binomial process:
 
-default ~ Binomial(1, P(default))
+default ~ Binomial(1, PD)
 
-This means:
+This introduces real-world uncertainty:
 
-- each borrower has a probability of default  
-- the actual outcome is randomly sampled  
+- high PD → more likely to default  
+- low PD → less likely, but still possible  
 
-Examples:
-
-- P = 0.8 → likely default, not guaranteed  
-- P = 0.2 → unlikely default, but possible  
-
----
 
 ## Why Not Use a Threshold?
 
-Avoid:
+Avoid deterministic rules like:
 
-default = P(default) > 0.5
+default = PD > 0.5
 
 Because:
 
-- it creates deterministic outcomes  
-- removes real-world uncertainty  
+- removes randomness  
 - produces unrealistic data  
+- eliminates overlap between good and bad borrowers  
 
----
 
 ## Key Concept
 
 Probability ≠ Outcome
 
-- probability represents risk  
-- outcome represents what actually happens  
+- PD = risk estimate  
+- default = realized event  
 
----
 
-## Feature Distribution Choices
-
-Some features are generated using specific distributions:
+## Feature Distribution Design
 
 ### Beta Distribution
 Used for:
@@ -95,10 +89,9 @@ Used for:
 - credit_utilization  
 
 Reason:
-- values must be between 0 and 1  
-- allows realistic skew (most borrowers are not extreme)
+- bounded between 0 and 1  
+- flexible skew for realistic populations  
 
----
 
 ### Poisson Distribution
 Used for:
@@ -106,38 +99,32 @@ Used for:
 
 Reason:
 - models count of rare events  
-- most borrowers have few delinquencies  
 
----
 
 ### Binomial Distribution
 Used for:
 - default outcome  
 
 Reason:
-- models binary events (default vs no default)  
-- driven by probability  
+- models binary event driven by probability  
 
----
 
 ## Business Interpretation
 
 - default = 1 → borrower failed to repay  
 - default = 0 → borrower repaid  
 
-This assumes the loan has already been issued.
+Assumes loan has already been issued.
 
----
 
 ## Mental Model
 
-Borrower Features  
-→ Risk Score  
-→ Probability of Default  
-→ Observed Default  
+Features  
+→ Risk Signal  
+→ Probability  
+→ Outcome  
 
----
 
 ## Interview Framing
 
-“We simulate credit behavior by constructing a risk signal from borrower features, mapping it to probability using a sigmoid function, and sampling outcomes to reflect real-world uncertainty.”
+“We simulate credit behavior by generating a risk signal from borrower features, incorporating non-linear effects and interactions, converting it into probability using a sigmoid function, and sampling outcomes to reflect real-world uncertainty.”

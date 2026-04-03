@@ -1,78 +1,93 @@
-# 04 - Modeling and Decision System
+# Modeling and Decision System
 
 ## Overview
 
-This module builds a simple credit risk decision system:
+This module builds a complete credit decision system:
 
-data → features → model → probability of default (PD) → decision → evaluation
+Data → Features → Model → Probability of Default (PD) → Decision → Evaluation
 
----
+The goal is not just prediction, but translating predictions into business decisions.
+
 
 ## Model
 
-A Logistic Regression model is trained to predict probability of default (PD).
+We use Logistic Regression to estimate probability of default.
 
-- Input: engineered features
-- Output: probability of default per customer
+- Input: engineered features  
+- Output: PD for each customer  
 
-The model is trained using a stratified train/test split.
+Training setup:
 
----
+- stratified train/test split  
+- scaling applied before modeling  
+
+The model focuses on producing a well-ranked and interpretable risk signal.
+
 
 ## Predicted Risk (PD)
 
 The model outputs:
 
-PD = probability that a customer defaults
+PD = probability that a borrower defaults
 
-This is used as the core risk signal for decision making.
+This serves as the core input to the decision system.
 
----
+Important:
+
+PD is not a decision — it is a risk estimate.
+
 
 ## Decision Policy
 
-A simple threshold-based policy is applied:
+A threshold-based policy converts PD into actions:
 
-- Approve: PD < 0.18
-- Review: 0.18 ≤ PD < 0.32
-- Reject: PD ≥ 0.32
+- Approve: PD < 0.18  
+- Review: 0.18 ≤ PD < 0.32  
+- Reject: PD ≥ 0.32  
 
-This simulates a real-world credit decision strategy.
+This reflects how real credit systems translate risk into operational decisions.
 
----
 
-## Evaluation
+## Evaluation Framework
 
-### 1. AUC
+We evaluate both model performance and business outcomes.
 
-Measures ranking quality of the model.
 
----
+### 1. Model Performance
 
-### 2. Decision Metrics
+**AUC (Area Under ROC Curve)**
 
-- Decision distribution (approve / review / reject)
-- Default rate per decision bucket
+- measures ranking ability  
+- evaluates how well the model separates good vs bad borrowers  
 
----
 
-### 3. Approval Metrics
+### 2. Decision Distribution
 
-- Approval Rate = % of customers approved
-- Default Rate (Approved Only) = risk of approved population
+- % approved  
+- % reviewed  
+- % rejected  
 
-This represents the business tradeoff between growth and risk.
+Shows how strict or lenient the policy is.
 
----
+
+### 3. Business Metrics
+
+- Approval Rate = % of customers approved  
+- Default Rate (Approved Only) = risk of accepted population  
+
+This captures the key business tradeoff:
+
+growth vs risk
+
 
 ### 4. Calibration
 
-Calibration checks whether predicted probabilities match reality.
+Calibration checks whether predicted probabilities match observed outcomes.
 
-A calibration table compares:
+We compare:
 
-- average predicted PD
-- actual default rate
+- average predicted PD  
+- actual default rate  
 
 across risk buckets.
 
@@ -80,21 +95,26 @@ Good calibration means:
 
 predicted ≈ actual
 
----
+This is critical for using probabilities in decision systems.
+
 
 ## Key Learnings
 
-- Model performance depends on data signal, not just model choice
-- Feature engineering can encode non-linear risk patterns
-- Decision thresholds control business tradeoffs
-- Calibration is critical for using probabilities in decisions
-- Small threshold changes can significantly impact approval volume
+- Model performance depends on data signal and features  
+- Decision thresholds directly control business outcomes  
+- Small threshold changes can significantly impact approval volume  
+- Calibration is essential when using probabilities for decisions  
+- Prediction and decision must be separated in system design  
 
----
 
 ## Next Steps
 
-- Threshold optimization (grid search)
-- Model comparison (tree-based models)
-- Cost-based decision optimization
-- Stability testing across multiple data samples
+- threshold optimization  
+- model comparison (tree-based models)  
+- cost-based decision optimization  
+- stability testing across multiple datasets  
+
+
+## Interview Framing
+
+“This system separates prediction from decision. The model estimates probability of default, and a policy layer converts that into actions while controlling the tradeoff between growth and risk.”

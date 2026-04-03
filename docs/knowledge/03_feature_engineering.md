@@ -1,11 +1,11 @@
 # Feature Engineering — From Raw Data to Risk Signals
 
 ## Objective
+
 Transform raw borrower data into meaningful signals that help estimate credit risk.
 
 Feature engineering is not about creating many features — it is about creating the right signals.
 
----
 
 ## Why Feature Engineering Matters
 
@@ -19,13 +19,11 @@ They learn from:
 
 Good features make risk patterns easier to learn.
 
----
 
 ## Core Principle
 
-We transform raw variables into representations that better capture risk.
+We transform raw variables into representations that better capture risk behavior.
 
----
 
 ## Features Created
 
@@ -37,14 +35,13 @@ loan_to_income = loan_amount / annual_income
 
 Purpose:
 
-- measures how large the loan is relative to income  
-- higher values indicate higher financial burden  
+- measures financial burden  
+- captures ability to repay  
 
 Risk Insight:
 
 Higher loan-to-income → higher probability of default
 
----
 
 ### 2. Credit Score Bucket
 
@@ -57,14 +54,13 @@ Definition:
 Purpose:
 
 - captures non-linear risk behavior  
-- avoids assuming linear relationship  
+- avoids assuming linear relationships  
 
 Risk Insight:
 
 - low score → high risk  
 - high score → low risk  
 
----
 
 ### 3. High Utilization Flag
 
@@ -74,13 +70,12 @@ credit_utilization > 0.7
 
 Purpose:
 
-- identifies borrowers using most of their credit  
+- identifies borrowers using most of their available credit  
 
 Risk Insight:
 
 High utilization → financial stress → higher default risk
 
----
 
 ### 4. Delinquency Flag
 
@@ -90,13 +85,12 @@ num_delinquencies > 0
 
 Purpose:
 
-- captures history of missed payments  
+- captures past missed payments  
 
 Risk Insight:
 
-Past delinquency is one of the strongest predictors of default
+Past delinquency is a strong predictor of default
 
----
 
 ### 5. Employment Stability
 
@@ -106,38 +100,35 @@ employment_years < 2
 
 Purpose:
 
-- measures stability of income  
+- measures income stability  
 
 Risk Insight:
 
 Short employment history → higher uncertainty → higher risk
 
----
 
 ## Design Philosophy
 
 - Keep features simple and interpretable  
 - Focus on domain-relevant signals  
+- Capture non-linear effects through transformations  
 - Avoid unnecessary complexity  
 
----
 
 ## What We Avoided
 
-- complex transformations  
-- scaling and normalization (not needed for trees)  
 - excessive feature creation  
+- complex transformations with low interpretability  
+- overfitting to synthetic data  
 
----
 
 ## Mental Model
 
 Raw Data  
-→ Derived Signals  
-→ Risk Estimation  
+→ Derived Risk Signals  
+→ Model Input  
 
----
 
 ## Interview Framing
 
-“Feature engineering focuses on transforming raw borrower attributes into risk-relevant signals such as loan burden, credit behavior, and financial stability. The goal is to make patterns easier for the model to learn while keeping features interpretable.”
+“Feature engineering focuses on transforming borrower attributes into interpretable risk signals such as financial burden, credit behavior, and stability. We also capture non-linear effects using transformations like buckets and flags, making patterns easier for the model to learn.”
