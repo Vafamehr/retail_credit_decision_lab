@@ -23,6 +23,7 @@ This module currently covers:
 * processed input data loading
 * model training with Logistic Regression
 * probability of default prediction
+* threshold optimization for approvals
 * threshold-based approval policy
 * business and calibration evaluation
 * artifact saving for model and scaler
@@ -31,18 +32,18 @@ This module currently covers:
 
 ## High-Level Flow
 
-Processed Feature Data
-→ Train Model
-→ Predict PD
-→ Apply Approval Policy
-→ Evaluate Decisions
+Processed Feature Data  
+→ Train Model  
+→ Predict PD  
+→ Optimize Approval Threshold  
+→ Apply Approval Policy  
+→ Evaluate Decisions  
 → Save Artifacts
 
 ---
 
 ## Current Folder Structure
 
-```
 src/
   credit_approval/
     pipeline.py
@@ -55,9 +56,9 @@ src/
     calibration.py
     evaluate_model.py
   decision/
+    optimize_thresholds.py
   utils/
   runner.py
-```
 
 ---
 
@@ -79,6 +80,7 @@ Module orchestration layer.
 * loads data
 * calls model training and scoring
 * builds results table
+* computes optimized approval threshold
 * applies approval policy
 * runs evaluation
 * saves artifacts
@@ -93,16 +95,37 @@ This file owns the full workflow for this problem.
 Business decision logic.
 
 * converts predicted PD into:
-
   * approve
   * review
   * reject
 
-Current thresholds:
+Current decision logic:
 
-* approve: PD < 0.18
-* review: 0.18 ≤ PD < 0.32
+* approve: PD < optimized approval threshold
+* review: optimized approval threshold ≤ PD < 0.32
 * reject: PD ≥ 0.32
+
+Key idea:
+
+* approval threshold is data-driven
+* reject threshold is currently a fixed business rule
+
+---
+
+### decision/optimize_thresholds.py
+
+Threshold optimization layer.
+
+* searches candidate approval thresholds
+* evaluates approval population at each threshold
+* selects the threshold that maximizes approval rate
+* enforces a business constraint on approved default rate
+
+Current constraint:
+
+* approved default rate ≤ 15%
+
+This layer separates threshold selection from hardcoded policy rules.
 
 ---
 
@@ -125,10 +148,16 @@ Returns model, scaler, and scored outputs.
 
 Reusable evaluation layer.
 
+Includes:
+
 * decision distribution
 * default rates by decision
 * approval metrics
 * calibration table
+
+This layer checks both:
+* model usefulness
+* decision quality
 
 ---
 
@@ -146,9 +175,9 @@ data/processed/loan_features.csv
 
 * X = features
 * y = default
-* customer_id retained
+* customer_id retained separately
 
-Categorical variables encoded using one-hot encoding.
+Categorical variables are encoded using one-hot encoding.
 
 ---
 
@@ -156,7 +185,7 @@ Categorical variables encoded using one-hot encoding.
 
 * stratified split
 * fit StandardScaler
-* train Logistic Regression
+* train LogisticRegression
 * predict PD
 * compute AUC
 
@@ -164,7 +193,7 @@ Categorical variables encoded using one-hot encoding.
 
 ### 4. Build Results Table
 
-Create:
+Create result dataset with:
 
 * customer_id
 * actual_default
@@ -172,7 +201,18 @@ Create:
 
 ---
 
-### 5. Apply Decision Policy
+### 5. Optimize Approval Threshold
+
+Use scored results to find the approval cutoff that:
+
+* maximizes approval rate
+* while keeping approved default rate ≤ 15%
+
+This produces a data-driven approval threshold.
+
+---
+
+### 6. Apply Decision Policy
 
 Convert PD → decision:
 
@@ -180,28 +220,33 @@ Convert PD → decision:
 * review
 * reject
 
+Current structure:
+
+* approve below optimized threshold
+* review between optimized threshold and 0.32
+* reject at or above 0.32
+
 ---
 
-### 6. Evaluate
+### 7. Evaluate
 
 Evaluate:
 
 * AUC
 * decision distribution
+* default rate by decision
 * approval rate
-* default rate (approved)
+* default rate among approved customers
 * calibration
 
 ---
 
-### 7. Save Artifacts
+### 8. Save Artifacts
 
 Saved to artifacts/:
 
 * model → logisticregression_model.pkl
 * scaler → standardscaler_scaler.pkl
-
-Names are derived from object types.
 
 ---
 
@@ -209,29 +254,14 @@ Names are derived from object types.
 
 ### Separation of Prediction and Decision
 
-Model predicts risk.
+Model predicts risk.  
 Policy makes decisions.
-
-This separation makes the system:
-
-* easier to explain
-* easier to tune
-* closer to real-world systems
 
 ---
 
-### Shared vs Module-Specific Logic
+### Separation of Threshold Optimization and Policy
 
-Shared (reusable):
-
-* modeling
-* evaluation
-* feature preparation
-
-Module-specific:
-
-* approval policy
-* pipeline orchestration
+Threshold selection is learned from data, not hardcoded.
 
 ---
 
@@ -257,24 +287,23 @@ python -m src.credit_approval.pipeline
 
 ---
 
-## Current Performance
+## Current Performance Snapshot
 
 * AUC ≈ 0.69
-* Approval Rate ≈ 20%
-* Default Rate (Approved) ≈ 14–15%
+* Optimized approval threshold ≈ 0.1818
+* Approval Rate ≈ 21%
+* Default Rate (Approved) ≈ 14.9%
 
-Policy:
+Decision distribution:
 
-* approve < 0.18
-* review 0.18–0.32
-* reject ≥ 0.32
+* approve ≈ 21%
+* review ≈ 41%
+* reject ≈ 38%
 
 ---
 
 ## Key Insight
 
-This is not just a model.
+This is a decision system:
 
-It is a decision system:
-
-Prediction → Decision → Business Outcome
+Prediction → Threshold Optimization → Decision → Business Outcome

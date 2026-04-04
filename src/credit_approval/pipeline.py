@@ -2,16 +2,15 @@ from src.modeling.train_model import load_data, prepare_data, train_model
 from src.credit_approval.policy import apply_approval_policy
 from src.evaluation.evaluate_model import evaluate_decisions
 from src.evaluation.calibration import calibration_table, print_calibration
+from src.decision.optimize_thresholds import find_optimal_threshold
 
 import pandas as pd
 import os
 import pickle
 
+
 def run_credit_approval_pipeline():
     path = "data/processed/loan_features.csv"
-
-    # Model identifier (for future extensibility)
-    model_name = "logistic_regression"
 
     # Load + prepare
     df = load_data(path)
@@ -22,12 +21,12 @@ def run_credit_approval_pipeline():
 
     # Train + score
     model, scaler, predicted_risk, y_test, id_test = train_model(X, y, customer_ids)
+
     model_name = model.__class__.__name__.lower()
     scaler_name = scaler.__class__.__name__.lower()
 
     print("\n===== MODEL PERFORMANCE =====")
 
-    
     # Save artifacts
     os.makedirs("artifacts", exist_ok=True)
 
@@ -46,8 +45,23 @@ def run_credit_approval_pipeline():
         "predicted_risk": predicted_risk,
     })
 
-    # Decision
-    results = apply_approval_policy(results)
+    # ===== THRESHOLD OPTIMIZATION (FIXED) =====
+    threshold, optimized_approval_rate = find_optimal_threshold(
+        results,
+        max_default_rate=0.15
+    )
+
+    print("\n===== THRESHOLD OPTIMIZATION =====")
+    print(f"Optimized approval threshold: {threshold:.4f}")
+    print(f"Optimized approval rate: {optimized_approval_rate:.2%}")
+    print("Constraint: approved default rate <= 15.00%")
+
+
+    results = apply_approval_policy(
+    results,
+    approve_threshold=threshold,
+    reject_threshold=0.32
+    )
 
     # Evaluation
     evaluate_decisions(results)
@@ -70,4 +84,4 @@ def run_credit_approval_pipeline():
 
 
 if __name__ == "__main__":
-    run_credit_approval_pipeline()    
+    run_credit_approval_pipeline()
