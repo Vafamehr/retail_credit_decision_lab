@@ -1,0 +1,326 @@
+# Module 02 — Response Modeling (Offer Acceptance)
+
+## 1. Problem Definition (What are we solving?)
+
+In retail banking and lending systems, once a customer is **approved for credit**, the next critical question is:
+
+> **Will the customer actually accept the offer?**
+
+This is known as **Response Modeling** (also called:
+
+* Offer Acceptance Modeling
+* Take-Up Rate Modeling
+* Conversion Modeling)
+
+It is fundamentally different from risk modeling.
+
+---
+
+## 2. Why This Matters (Business View)
+
+A bank does NOT make money by approving customers.
+
+It makes money when:
+
+* customers **accept offers**
+* loans are **booked**
+
+### Without response modeling:
+
+* Bank may approve low-risk customers → but they reject offers
+* Marketing campaigns are inefficient
+* Pricing strategy is blind
+
+### With response modeling:
+
+* Target customers who are **likely to accept**
+* Optimize **offer design (rate, term, payment)**
+* Improve **conversion rate**
+* Reduce wasted marketing spend
+
+---
+
+## 3. Key Concept (Critical Interview Insight)
+
+> **Risk ≠ Behavior**
+
+| Model Type       | Question           | Output                 |
+| ---------------- | ------------------ | ---------------------- |
+| Credit Risk (PD) | Will they default? | Risk probability       |
+| Response Model   | Will they accept?  | Acceptance probability |
+
+A customer can be:
+
+* Low risk BUT reject offer ❌
+* High risk BUT accept aggressively ❌
+
+👉 This is why **both models must exist separately**
+
+---
+
+## 4. System Design (What you built)
+
+### Pipeline Flow
+
+```text
+Shared Features → Offer Simulation → Relationship Features → Behavior Simulation → Model → Evaluation
+```
+
+---
+
+## 5. Data Construction (Very Important)
+
+Unlike risk modeling, response modeling **depends on the offer itself**.
+
+### 5.1 Base Data (Shared Layer)
+
+From:
+
+```text
+data/shared/processed/loan_features.csv
+```
+
+Contains:
+
+* income
+* credit score
+* DTI
+* utilization
+* delinquency flags
+
+---
+
+### 5.2 Offer Features (Simulated Pricing Layer)
+
+You simulate:
+
+* `offered_interest_rate`
+* `estimated_monthly_payment`
+* `payment_to_income_ratio`
+
+These are derived from:
+
+* risk signals
+* loan characteristics
+
+👉 This mimics **real underwriting + pricing engines**
+
+---
+
+### 5.3 Relationship Features
+
+Simulated behavioral signals:
+
+* existing_customer
+* relationship_tenure_months
+* number of products
+
+👉 Captures:
+
+> customer loyalty and engagement
+
+---
+
+### 5.4 Acceptance Simulation (Behavior Engine)
+
+You construct a **behavioral score** using:
+
+* financial burden (payment_to_income)
+* pricing (interest rate)
+* risk signals
+* relationship strength
+* loan purpose
+* noise (real-world randomness)
+
+Then apply:
+
+```text
+sigmoid(score) → response_probability
+```
+
+Then sample:
+
+```text
+accepted_offer ∈ {0,1}
+```
+
+👉 This creates a **realistic probabilistic dataset**
+
+---
+
+## 6. Modeling Approach
+
+Model used:
+
+```text
+Logistic Regression
+```
+
+Why:
+
+* interpretable
+* stable
+* sufficient for behavioral modeling baseline
+
+Goal is NOT complexity.
+
+Goal is:
+
+> clean pipeline + correct business framing
+
+---
+
+## 7. Evaluation (Critical Section)
+
+### 7.1 AUC (Ranking Power)
+
+Measures:
+
+> Can we rank high vs low responders?
+
+Your result:
+
+```text
+~0.68 → realistic for behavioral models
+```
+
+---
+
+### 7.2 Calibration (VERY IMPORTANT)
+
+Compare:
+
+* mean predicted probability
+* actual response rate
+
+Your result:
+
+```text
+Predicted ≈ Actual → near-zero gap
+```
+
+👉 This is strong.
+
+Why it matters:
+
+* forecasting campaign results
+* planning expected conversions
+
+---
+
+### 7.3 Decile Analysis (Business Gold)
+
+Customers grouped into 10 buckets.
+
+Example:
+
+| Decile | Avg Pred | Actual |
+| ------ | -------- | ------ |
+| Top    | High     | High   |
+| Bottom | Low      | Low    |
+
+Interpretation:
+
+> “Top 10% customers have ~50%+ chance of accepting”
+
+👉 This is how targeting is done in real campaigns.
+
+---
+
+## 8. Outputs (What your system produces)
+
+* acceptance probability per customer
+* calibrated predictions
+* decile segmentation
+* trained model artifacts
+
+Saved in:
+
+```text
+artifacts/response_modeling/
+```
+
+---
+
+## 9. How It Connects to Full System
+
+Now you have:
+
+### Module 01 — Credit Approval
+
+* Predicts **default risk (PD)**
+
+### Module 02 — Response Modeling
+
+* Predicts **acceptance probability**
+
+Together:
+
+```text
+Decision = f(Risk, Response)
+```
+
+This leads to:
+
+* better targeting
+* better pricing
+* realistic business decisions
+
+---
+
+## 10. Limitations (Important to say in interviews)
+
+* synthetic data (not real behavior)
+* no causal modeling
+* no optimization yet
+* simple model (no boosting)
+
+These are intentional:
+
+* keep system interpretable
+* focus on structure and thinking
+
+---
+
+## 11. What This Demonstrates (Your Value)
+
+You can now say:
+
+> “I designed a response modeling system that simulates offer features and customer behavior, then predicts acceptance probability and validates it using calibration and decile analysis to support targeting strategies.”
+
+This is:
+
+* practical
+* structured
+* aligned with real banking systems
+
+---
+
+## 12. What Comes Next (Module 03)
+
+Next step is:
+
+> Combine **Risk + Response + Economics**
+
+To answer:
+
+```text
+Which offers maximize profit?
+```
+
+This becomes:
+
+* expected value modeling
+* policy optimization
+* eventually RL
+
+---
+
+## Final Takeaway
+
+This module is not about ML.
+
+It is about:
+
+> understanding how **customers react to decisions**
+
