@@ -2,65 +2,71 @@
 
 ## Overview
 
-This project builds end-to-end decision systems for retail banking, starting with a credit approval system.
+This project builds an end-to-end decision system for retail banking.
 
-It converts data into business actions:
+It focuses on converting predictions into business decisions using risk, customer behavior, and economic logic.
 
-data → model → risk (PD) → decision → evaluation
+Core flow:
+
+Data, Risk, Response, Pricing, Decision
 
 ---
 
 ## What This Does
 
-- Predicts probability of default (PD) using Logistic Regression  
-- Converts PD into decisions: approve / review / reject  
-- Optimizes approval threshold based on a risk constraint  
-- Evaluates outcomes at both model and decision level  
+- estimates probability of default (PD) using a risk model  
+- predicts customer acceptance using a response model  
+- combines risk, response, and cost structure into expected value  
+- selects the best offer or no-offer per customer  
+- evaluates outcomes at both model and decision level  
+
+---
+
+## System Structure
+
+### Module 01 — Credit Approval
+- predicts default risk  
+- optimizes threshold under a default constraint  
+- produces approve / reject / review decisions  
+
+### Module 02 — Response Modeling
+- simulates offers and behavioral signals  
+- predicts acceptance probability  
+- evaluated using calibration and decile analysis  
+
+### Module 03 — Pricing Strategy
+- adjusts risk per offer  
+- computes expected value using margin, loss, and cost  
+- selects optimal offer or no-offer decision  
 
 ---
 
 ## Key Idea
 
-This is not just a model.
+This is not a collection of models.
 
-It is a decision system:
+It is a structured decision system:
 
-- model estimates risk  
-- policy makes decisions  
-- evaluation measures business impact  
+- models estimate probabilities  
+- logic combines signals  
+- system produces actions  
+
+Decision = f(Risk, Response, Economics)
 
 ---
 
-## Example Output
+## Example Results
 
-- AUC ≈ 0.69  
-- Approval Rate ≈ 21%  
-- Default Rate (Approved) ≈ 14–15%  
-
-Clear risk separation across:
-- approve (low risk)
-- review (medium risk)
-- reject (high risk)
+- controlled default rate around 15% on approved population  
+- response model AUC around 0.69 with good calibration  
+- high interest offers produce strongest profitability  
+- mid-level offers balance acceptance and margin  
+- low-rate offers often fail economic viability  
+- large portion of customers correctly filtered into no-offer  
 
 ---
 
 ## How to Run
 
-python -m src.runner
-
----
-
-## Why This Matters
-
-- avoids arbitrary thresholds  
-- introduces data-driven decisioning  
-- separates prediction vs policy vs evaluation  
-- reflects how real credit systems are structured  
-
----
-
-## Next Steps
-
-- optimize reject threshold  
-- add profit / loss simulation  
-- extend to pricing and credit limit decisions  
+```bash
+python runner.py
