@@ -1,5 +1,3 @@
-# src/response_modeling/train_response_model.py
-
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -12,7 +10,7 @@ def train_response_model(
     test_size: float = 0.2,
     random_state: int = 42,
 ):
-    X_train, X_test, y_train, y_test, id_train, id_test = train_test_split(
+    X_train, X_test, y_train, y_test, _, id_test = train_test_split(
         X,
         y,
         ids,

@@ -1,18 +1,27 @@
-# src/credit_approval/calibration.py
-
 import pandas as pd
+
+from src.utils.schema import DEFAULT_TARGET, P_DEFAULT
 
 
 def calibration_table(df: pd.DataFrame, n_bins: int = 10) -> pd.DataFrame:
     df = df.copy()
 
-    df["bin"] = pd.qcut(df["predicted_risk"], q=n_bins, duplicates="drop")
+    if P_DEFAULT not in df.columns or DEFAULT_TARGET not in df.columns:
+        raise ValueError(
+            f"Required columns '{P_DEFAULT}' and/or '{DEFAULT_TARGET}' not found."
+        )
 
-    calibration = df.groupby("bin").agg(
-        avg_predicted_risk=("predicted_risk", "mean"),
-        actual_default_rate=("actual_default", "mean"),
-        count=("actual_default", "size"),
-    ).reset_index()
+    df["bin"] = pd.qcut(df[P_DEFAULT], q=n_bins, duplicates="drop")
+
+    calibration = (
+        df.groupby("bin")
+        .agg(
+            avg_predicted_risk=(P_DEFAULT, "mean"),
+            actual_default_rate=(DEFAULT_TARGET, "mean"),
+            count=(DEFAULT_TARGET, "size"),
+        )
+        .reset_index()
+    )
 
     return calibration
 

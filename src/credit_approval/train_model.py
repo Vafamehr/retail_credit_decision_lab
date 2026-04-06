@@ -1,23 +1,35 @@
-# src/credit_approval/train_model.py
-
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
+from src.utils.schema import (
+    CREDIT_APPROVAL_FEATURE_COLUMNS,
+    CUSTOMER_ID,
+    DEFAULT_TARGET,
+    missing_columns,
+)
 
-def load_data(path: str) -> pd.DataFrame:
+
+def load_data(path) -> pd.DataFrame:
     return pd.read_csv(path)
 
 
 def prepare_data(df: pd.DataFrame):
-    customer_ids = df["customer_id"].copy()
-    y = df["default"]
+    required_columns = [CUSTOMER_ID, DEFAULT_TARGET] + CREDIT_APPROVAL_FEATURE_COLUMNS
+    missing = missing_columns(df, required_columns)
+    if missing:
+        raise ValueError(
+            f"Missing required columns for credit approval training: {missing}"
+        )
 
-    X = df.drop(columns=["default", "customer_id"])
+    customer_ids = df[CUSTOMER_ID].copy()
+    y = df[DEFAULT_TARGET].copy()
+
+    X = df[CREDIT_APPROVAL_FEATURE_COLUMNS].copy()
     X = pd.get_dummies(X, drop_first=True)
 
-    mean_default = df["default"].mean()
+    mean_default = y.mean()
 
     return X, y, customer_ids, mean_default
 

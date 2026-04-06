@@ -1,39 +1,38 @@
-from pathlib import Path
-import pandas as pd
 import joblib
+import pandas as pd
 
-from src.credit_approval.train_model import load_data, prepare_data, train_model
-from src.credit_approval.policy import apply_approval_policy
-from src.credit_approval.evaluate_model import evaluate_decisions
 from src.credit_approval.calibration import calibration_table, print_calibration
+from src.credit_approval.evaluate_model import evaluate_decisions
 from src.credit_approval.optimize_thresholds import find_optimal_threshold
+from src.credit_approval.policy import apply_approval_policy
+from src.credit_approval.train_model import load_data, prepare_data, train_model
+from src.utils.config import (
+    CREDIT_FEATURE_COLUMNS_PATH,
+    CREDIT_MODEL_PATH,
+    CREDIT_SCALER_PATH,
+    DEFAULT_APPROVAL_THRESHOLD,
+    LOAN_FEATURES_PATH,
+    ensure_directories,
+)
+from src.utils.schema import CUSTOMER_ID, DEFAULT_TARGET, P_DEFAULT
 
 
+def save_artifacts(model, scaler, feature_columns) -> None:
+    CREDIT_MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
 
+    joblib.dump(model, CREDIT_MODEL_PATH)
+    joblib.dump(scaler, CREDIT_SCALER_PATH)
+    joblib.dump(feature_columns, CREDIT_FEATURE_COLUMNS_PATH)
 
-
-def save_artifacts(model, scaler, feature_columns):
-    output_dir = Path("artifacts/credit_approval")
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    model_name = model.__class__.__name__.lower()
-    scaler_name = scaler.__class__.__name__.lower()
-
-    model_path = output_dir / f"{model_name}_model.pkl"
-    scaler_path = output_dir / f"{scaler_name}_scaler.pkl"
-    feature_path = output_dir / "credit_feature_columns.pkl"
-
-    joblib.dump(model, model_path)
-    joblib.dump(scaler, scaler_path)
-    joblib.dump(feature_columns, feature_path)
-
-    print(f"Artifacts saved to: {output_dir}")   
+    print(f"Model saved to: {CREDIT_MODEL_PATH}")
+    print(f"Scaler saved to: {CREDIT_SCALER_PATH}")
+    print(f"Feature columns saved to: {CREDIT_FEATURE_COLUMNS_PATH}")
 
 
 def run_credit_approval_pipeline():
-    path = "data/shared/processed/loan_features.csv"
+    ensure_directories()
 
-    df = load_data(path)
+    df = load_data(LOAN_FEATURES_PATH)
     X, y, customer_ids, mean_default = prepare_data(df)
 
     print("\n===== CREDIT APPROVAL DATA SUMMARY =====")
@@ -42,18 +41,20 @@ def run_credit_approval_pipeline():
     print(f"Feature Count After Encoding: {X.shape[1]}")
     print(f"Mean Default Rate: {mean_default:.2%}")
 
-    model, scaler, predicted_risk, y_test, id_test = train_model(X, y, customer_ids)    
+    model, scaler, predicted_risk, y_test, id_test = train_model(X, y, customer_ids)
     save_artifacts(model, scaler, X.columns.tolist())
 
-    results = pd.DataFrame({
-        "customer_id": id_test.values,
-        "actual_default": y_test.values,
-        "predicted_risk": predicted_risk,
-    })
+    results = pd.DataFrame(
+        {
+            CUSTOMER_ID: id_test.values,
+            DEFAULT_TARGET: y_test.values,
+            P_DEFAULT: predicted_risk,
+        }
+    )
 
     threshold, optimized_approval_rate = find_optimal_threshold(
         results,
-        max_default_rate=0.15
+        max_default_rate=0.15,
     )
 
     print("\n===== THRESHOLD OPTIMIZATION =====")
@@ -64,7 +65,7 @@ def run_credit_approval_pipeline():
     results = apply_approval_policy(
         results,
         approve_threshold=threshold,
-        reject_threshold=0.32
+        reject_threshold=max(DEFAULT_APPROVAL_THRESHOLD, 0.32),
     )
 
     evaluate_decisions(results)
@@ -73,7 +74,7 @@ def run_credit_approval_pipeline():
     approved = results[results["decision"] == "approve"]
 
     approval_rate = len(approved) / len(results)
-    default_rate_approved = approved["actual_default"].mean()
+    default_rate_approved = approved[DEFAULT_TARGET].mean()
 
     print(f"Approval Rate: {approval_rate:.2%}")
     print(f"Default Rate (Approved): {default_rate_approved:.2%}")

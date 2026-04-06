@@ -4,9 +4,9 @@
 
 Modern banking systems are not just predictive models.
 
-They are **decision systems**.
+They are decision systems.
 
-> Data Science in banking = turning data into decisions under constraints
+Data science in banking means turning data into decisions under constraints.
 
 ---
 
@@ -14,9 +14,7 @@ They are **decision systems**.
 
 Every real system follows this structure:
 
-```text
 Data → Prediction → Decision
-```
 
 ---
 
@@ -24,122 +22,136 @@ Data → Prediction → Decision
 
 Raw customer and loan information:
 
-* income
-* credit score
-* debt-to-income (DTI)
-* utilization
-* delinquencies
+- income  
+- credit score  
+- debt-to-income (DTI)  
+- utilization  
+- delinquencies  
 
 Plus engineered features.
 
 This layer answers:
 
-> “What do we know about the customer?”
+“What do we know about the customer?”
 
 ---
 
 ## 4. Layer 2 — Prediction
 
-We build models to estimate probabilities:
+Models estimate key probabilities:
 
-### Risk Model (PD)
+Risk Model (PD)  
+Probability that the customer will default  
 
-> Probability customer will default
-
-### Response Model
-
-> Probability customer will accept the offer
+Response Model  
+Probability that the customer will accept an offer  
 
 Outputs:
 
-```text
 P(default), P(accept)
-```
 
 ---
 
 ## 5. Layer 3 — Decision (Most Important)
 
-Predictions are NOT decisions.
+Predictions are not decisions.
 
-We combine them to make business choices.
+They must be combined with business logic and constraints.
 
-Example:
+Examples:
 
-```text
 Approve if:
-- Risk is low
-- AND expected acceptance is high
-```
+- risk is below threshold  
+- and portfolio constraints are satisfied  
 
-Or more generally:
+Offer selection based on economics:
 
-```text
-Decision = f(Risk, Response, Business Constraints)
-```
+Decision = f(Risk, Response, Economics, Constraints)
 
 ---
 
-## 6. What You Built
+## 6. What Is Implemented
 
 ### Module 01 — Credit Approval
 
-* Predict default risk (PD)
-* Optimize threshold under constraint
-* Make approve/reject decisions
+- predict default probability (PD)  
+- optimize approval threshold under default constraint  
+- produce approve / reject / review decisions  
 
 ---
 
 ### Module 02 — Response Modeling
 
-* Simulate offers
-* Predict acceptance probability
-* Evaluate using calibration and deciles
+- simulate multiple loan offers  
+- predict acceptance probability  
+- evaluate using calibration and decile analysis  
 
 ---
 
-## 7. Why This Matters
+### Module 03 — Pricing Strategy
+
+- adjust risk per offer  
+- compute expected value using margin and loss  
+- select best offer or no-offer option  
+
+---
+
+## 7. Why This Structure Matters
 
 Without this structure:
 
-* Models are disconnected
-* Decisions are inconsistent
-* Business impact is unclear
+- models are disconnected  
+- decisions are inconsistent  
+- business impact is unclear  
 
 With this structure:
 
-* Decisions are explainable
-* Trade-offs are controlled
-* Systems are scalable
+- decisions are consistent and explainable  
+- trade-offs are explicit  
+- system is extensible  
 
 ---
 
-## 8. Where This Goes Next
+## 8. What the System Is Doing
 
-The next step is combining both models:
+The system combines:
 
-```text
-Expected Value = f(Risk, Response, Revenue)
-```
+- risk (probability of default)  
+- behavior (probability of acceptance)  
+- economics (margin, loss, cost)  
 
-This leads to:
+to produce:
 
-* pricing optimization
-* targeting strategies
-* policy optimization
-* reinforcement learning
+- approval decisions  
+- offer selection  
+- expected value-based targeting  
 
 ---
 
-## 9. Interview Framing
+## 9. Where This Goes Next
+
+Next step is adding uncertainty-aware decisioning:
+
+Expected Value = f(Risk, Response, Economics, Uncertainty)
+
+This enables:
+
+- probabilistic decision policies  
+- better risk control  
+- Bayesian updates  
+- reinforcement learning integration  
+
+---
+
+## 10. Interview Framing
 
 You are not presenting:
 
-> “I trained models”
+“I trained models”
 
 You are presenting:
 
-> “I built a structured decision system that separates risk, behavior, and decision logic to align with real banking workflows.”
+“I built a structured decision system that separates risk, behavior, and economics to produce consistent, decision-ready outputs aligned with real banking workflows.”
 
 ---
 
@@ -147,4 +159,4 @@ You are presenting:
 
 The key shift is:
 
-> From predicting outcomes → to making decisions
+From predicting outcomes → to making decisions
