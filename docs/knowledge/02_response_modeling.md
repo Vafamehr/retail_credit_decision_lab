@@ -323,4 +323,25 @@ This module is not about ML.
 It is about:
 
 > understanding how **customers react to decisions**
+best way to think and distinguish between risk model and response model:
+risk model : P(default | customer)
+response model : P(accept | customer, offer)
+
+So :
+Customer Features:
+- credit_score
+- income
+- DTI
+- utilization
+- delinquencies
+
+Offer Features:
+- interest_rate
+- monthly_payment
+- payment_to_income
+
+Relationship Features:
+- existing_customer
+- tenure
+- product_count
 
