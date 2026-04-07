@@ -2,13 +2,13 @@
 
 ## Overview
 
-This project builds an end-to-end decision system for retail banking.
+This project implements an end-to-end retail credit decision system.
 
-It focuses on converting predictions into business decisions using risk, customer behavior, and economic logic.
+The goal is not just prediction, but **decision-making** — combining risk, customer behavior, and economics into actionable outcomes.
 
 Core flow:
 
-Data, Risk, Response, Pricing, Decision
+Data → Risk → Response → Pricing → Decision
 
 ---
 
@@ -16,9 +16,10 @@ Data, Risk, Response, Pricing, Decision
 
 - estimates probability of default (PD) using a risk model  
 - predicts customer acceptance using a response model  
-- combines risk, response, and cost structure into expected value  
-- selects the best offer or no-offer per customer  
-- evaluates outcomes at both model and decision level  
+- evaluates multiple offers using expected value  
+- selects the optimal offer (or no-offer) per customer  
+- applies a final decision policy (approve / decline / review)  
+- analyzes portfolio outcomes and policy tradeoffs  
 
 ---
 
@@ -26,18 +27,41 @@ Data, Risk, Response, Pricing, Decision
 
 ### Module 01 — Credit Approval
 - predicts default risk  
-- optimizes threshold under a default constraint  
-- produces approve / reject / review decisions  
+- applies approval threshold under risk constraints  
+- produces base risk signal  
+
+---
 
 ### Module 02 — Response Modeling
-- simulates offers and behavioral signals  
+- simulates offers and behavioral features  
 - predicts acceptance probability  
 - evaluated using calibration and decile analysis  
 
+---
+
 ### Module 03 — Pricing Strategy
 - adjusts risk per offer  
-- computes expected value using margin, loss, and cost  
-- selects optimal offer or no-offer decision  
+- computes:
+  - expected revenue  
+  - expected loss  
+  - expected value  
+
+- selects best offer per customer  
+
+---
+
+### Module 04 — Decision Policy
+- applies business constraints:
+  - risk threshold  
+  - acceptance threshold  
+  - economic viability  
+
+- produces final decisions:
+  - approve (with offer)  
+  - decline  
+  - manual review  
+
+- generates portfolio diagnostics and decision reasoning  
 
 ---
 
@@ -49,20 +73,49 @@ It is a structured decision system:
 
 - models estimate probabilities  
 - logic combines signals  
+- policy enforces constraints  
 - system produces actions  
 
 Decision = f(Risk, Response, Economics)
 
 ---
 
+## Example Insights
+
+- risk filtering removes a large portion of the population upfront  
+- acceptance probability is a major bottleneck even for viable customers  
+- expected value acts as a secondary filter  
+- high-APR offers dominate approvals due to profitability pressure  
+
+---
+
+## Policy Tradeoffs
+
+Sensitivity analysis shows:
+
+- acceptance threshold is the primary driver of approval volume  
+- risk threshold acts as a secondary control on portfolio quality  
+
+Key behavior:
+
+- relaxing acceptance threshold:
+  - increases approval rate significantly  
+  - increases total expected value  
+  - increases portfolio risk  
+
+- tightening acceptance threshold:
+  - sharply reduces approvals  
+  - improves portfolio quality  
+  - reduces revenue  
+
+---
+
 ## Example Results
 
-- controlled default rate around 15% on approved population  
-- response model AUC around 0.69 with good calibration  
-- high interest offers produce strongest profitability  
-- mid-level offers balance acceptance and margin  
-- low-rate offers often fail economic viability  
-- large portion of customers correctly filtered into no-offer  
+- approval rate ranges from near 0% to ~25% depending on policy  
+- expected value scales significantly with approval volume  
+- average risk increases gradually with relaxed risk thresholds  
+- portfolio outcomes emerge from tradeoffs, not a single objective  
 
 ---
 

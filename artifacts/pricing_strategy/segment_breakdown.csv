@@ -1,0 +1,5 @@
+policy_segment,count,rate
+outside_risk_appetite,4575,0.4575
+high_risk,3077,0.3077
+medium_risk,2200,0.22
+low_risk,148,0.0148

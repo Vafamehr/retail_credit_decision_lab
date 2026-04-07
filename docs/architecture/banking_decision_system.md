@@ -1,12 +1,15 @@
-# Architecture: Banking Decision Systems Lab
+# Architecture: Retail Credit Decision System
 
 ## Overview
 
-This repository is structured as a modular decision system, where each module represents a core banking capability:
+This repository implements a modular end-to-end credit decision system.
 
-- Module 01 → Credit Approval (Risk / PD)
-- Module 02 → Response Modeling (Customer Behavior)
-- Module 03 → Pricing Strategy (Decision / Economics)
+Each module represents a core banking capability:
+
+- Module 01 → Credit Approval (Risk / Probability of Default)
+- Module 02 → Response Modeling (Customer Acceptance)
+- Module 03 → Pricing Strategy (Expected Value Optimization)
+- Module 04 → Decision Policy (Final Business Decisions)
 
 Each module follows a consistent pattern:
 
@@ -14,17 +17,43 @@ Data → Features → Model → Decision Logic → Evaluation → Artifacts
 
 ---
 
-## High-Level Flow
+## High-Level System Flow
 
-Shared Data Layer  
+Synthetic Data Generation  
 ↓  
-Credit Approval (PD / Risk Model)  
+Feature Engineering  
+↓  
+Credit Approval (Risk Model)  
 ↓  
 Response Modeling (Acceptance Model)  
 ↓  
-Pricing Strategy (Expected Value Decisioning)  
+Pricing Strategy (Expected Value + Offer Selection)  
 ↓  
-Final Output: Offer Selection or No Offer
+Decision Policy (Approve / Decline / Review)  
+↓  
+Final Output: Portfolio Decisions
+
+---
+
+## End-to-End Decision Logic
+
+The system transforms predictions into actions in four stages:
+
+1. Risk Estimation  
+   Estimate probability of default for each customer  
+
+2. Behavior Estimation  
+   Estimate probability of accepting an offer  
+
+3. Economic Evaluation  
+   Compute expected value for each offer  
+
+4. Policy Decision  
+   Apply business constraints and select final action  
+
+Final decision is governed by:
+
+Decision = f(Risk, Acceptance, Expected Value)
 
 ---
 
@@ -46,6 +75,12 @@ src/
     pipeline.py
     risk_adjustment.py
     value_scoring.py
+
+  decision_policy/
+    pipeline.py
+    decision_engine.py
+    reporting.py
+    sensitivity.py
 
   data/
     generate_data.py
@@ -86,24 +121,24 @@ data/response_modeling/
 
 ## Module Design Pattern
 
-Each module is a self-contained pipeline with clear responsibilities.
+Each module is a self-contained pipeline.
 
 ### Pipeline (Orchestrator)
 
-- load data  
-- prepare features  
-- call modeling  
-- apply decision logic  
-- evaluate results  
-- save artifacts  
-- print summary  
+Responsible for:
+- loading data  
+- preparing features  
+- running models  
+- applying decision logic  
+- evaluating outputs  
+- saving artifacts  
 
 ---
 
 ### Modeling Layer
 
-- train model  
-- generate predictions  
+- trains predictive models  
+- outputs probabilities (not decisions)  
 - independent of business rules  
 
 ---
@@ -111,19 +146,68 @@ Each module is a self-contained pipeline with clear responsibilities.
 ### Decision Logic Layer
 
 - converts predictions into actions  
-- examples:
-  - approval thresholding  
-  - risk adjustment  
-  - expected value computation  
-  - offer selection  
+
+Examples:
+- approval thresholding  
+- risk adjustment  
+- expected value computation  
+- offer selection  
+- final decision policy  
 
 ---
 
 ### Evaluation Layer
 
-- compute performance metrics  
-- calibration and deciles  
-- business KPIs (approval rate, default rate, expected value)  
+- model metrics (AUC, calibration)  
+- business metrics:
+  - approval rate  
+  - expected value  
+  - risk profile  
+
+---
+
+## Module Responsibilities
+
+### Module 01 — Credit Approval
+
+- estimates probability of default  
+- applies approval threshold  
+- outputs base risk signal  
+
+---
+
+### Module 02 — Response Modeling
+
+- predicts probability of customer acceptance  
+- introduces behavioral dimension  
+
+---
+
+### Module 03 — Pricing Strategy
+
+- evaluates multiple APR offers  
+- computes:
+  - expected revenue  
+  - expected loss  
+  - expected value  
+
+- selects best offer per customer  
+
+---
+
+### Module 04 — Decision Policy
+
+- applies business constraints:
+  - risk threshold  
+  - acceptance threshold  
+  - economic viability  
+
+- assigns:
+  - approve (with offer)  
+  - decline  
+  - manual review  
+
+- produces portfolio-level outputs  
 
 ---
 
@@ -134,12 +218,27 @@ artifacts/
   response_modeling/
   pricing_strategy/
 
-Each contains:
-
-- model  
-- scaler  
+Outputs include:
+- trained models  
+- scalers  
 - feature columns  
-- scored outputs (for pricing)  
+- scored datasets  
+- final decision outputs  
+
+---
+
+## Runner
+
+`runner.py` executes the full pipeline:
+
+1. Data generation  
+2. Feature engineering  
+3. Credit approval  
+4. Response modeling  
+5. Pricing strategy  
+6. Decision policy  
+
+This enables reproducible, end-to-end execution.
 
 ---
 
@@ -147,24 +246,22 @@ Each contains:
 
 ### Separation of Concerns
 
-- data generation is separate from modeling  
-- modeling is separate from decision logic  
-- predictions are separate from business actions  
+- modeling ≠ decision making  
+- predictions ≠ actions  
 
 ---
 
 ### Deterministic Pipelines
 
 - reproducible runs  
-- no hidden transformations  
-- explicit data flow  
+- explicit transformations  
+- no hidden logic  
 
 ---
 
 ### Modular Isolation
 
 - each module owns its logic  
-- minimal coupling  
 - clean interfaces between modules  
 
 ---
@@ -172,36 +269,49 @@ Each contains:
 ### Business Alignment
 
 - each module maps to a real banking function  
-- outputs are decision-ready, not just predictions  
+- outputs are decision-ready  
 
 ---
 
 ## Current System Capability
 
-- probability of default modeling  
-- risk-based approval decisions  
-- customer acceptance prediction  
-- offer-level expected value computation  
-- offer selection with no-offer fallback  
-- portfolio-level economic view  
+The system supports:
+
+- risk estimation (default probability)  
+- customer behavior modeling  
+- multi-offer pricing evaluation  
+- expected value optimization  
+- policy-based decisioning  
+- portfolio-level diagnostics  
+- sensitivity analysis of policy thresholds  
 
 ---
 
-## Next Extension
+## System Behavior
 
-Decision system will be extended to include uncertainty-aware decisioning:
+The final portfolio is governed by three competing forces:
 
-Decision = f(Risk, Response, Economics, Uncertainty)
+- risk control  
+- customer acceptance  
+- profitability  
 
-- introduce probabilistic priors  
-- model uncertainty in default and response  
-- propagate uncertainty into expected value  
-- support risk-aware decision policies  
+The system produces decisions through tradeoffs between these constraints rather than optimizing a single objective.
+
+---
+
+## Next possible Extensions
+
+Planned enhancements:
+
+- threshold optimization  
+- constrained portfolio optimization  
+- Bayesian uncertainty modeling  
+- reinforcement learning for policy selection  
 
 ---
 
 ## Final Takeaway
 
-This is not a collection of models.
+This system is not a collection of independent models.
 
-It is a structured decision system that combines risk, behavior, and economics to drive business actions.
+It is a structured decision pipeline that integrates risk, behavior, and economics to produce actionable business decisions.
