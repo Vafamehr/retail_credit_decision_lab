@@ -10,6 +10,7 @@ Each module represents a core banking capability:
 - Module 02 → Response Modeling (Customer Acceptance)
 - Module 03 → Pricing Strategy (Expected Value Optimization)
 - Module 04 → Decision Policy (Final Business Decisions)
+- Module 05 → Bayesian Decision Layer (Uncertainty-Aware Evaluation)
 
 Each module follows a consistent pattern:
 
@@ -31,13 +32,15 @@ Pricing Strategy (Expected Value + Offer Selection)
 ↓  
 Decision Policy (Approve / Decline / Review)  
 ↓  
-Final Output: Portfolio Decisions
+Bayesian Decision Layer (Uncertainty Simulation + Risk Evaluation)  
+↓  
+Final Output: Portfolio Decisions + Risk Diagnostics
 
 ---
 
 ## End-to-End Decision Logic
 
-The system transforms predictions into actions in four stages:
+The system transforms predictions into actions in multiple stages:
 
 1. Risk Estimation  
    Estimate probability of default for each customer  
@@ -49,11 +52,15 @@ The system transforms predictions into actions in four stages:
    Compute expected value for each offer  
 
 4. Policy Decision  
-   Apply business constraints and select final action  
+   Apply business constraints and assign actions  
 
-Final decision is governed by:
+5. Uncertainty Evaluation (Bayesian Layer)  
+   Evaluate robustness of decisions under uncertainty  
 
-Decision = f(Risk, Acceptance, Expected Value)
+Final decision structure:
+
+Decision = f(Risk, Acceptance, Expected Value)  
+Bayesian Layer = evaluates stability of that decision  
 
 ---
 
@@ -61,36 +68,14 @@ Decision = f(Risk, Acceptance, Expected Value)
 
 src/
   credit_approval/
-    pipeline.py
-    policy.py
-    optimize_thresholds.py
-    inference.py
-
   response_modeling/
-    pipeline.py
-    train_response_model.py
-    evaluate_response_model.py
-
   pricing_strategy/
-    pipeline.py
-    risk_adjustment.py
-    value_scoring.py
-
   decision_policy/
-    pipeline.py
-    decision_engine.py
-    reporting.py
-    sensitivity.py
+  bayesian_decision/          ← NEW
 
   data/
-    generate_data.py
-
   features/
-    feature_engineering.py
-
   utils/
-    config.py
-    schema.py
 
 ---
 
@@ -103,8 +88,8 @@ data/shared/
   processed/
     loan_features.csv
 
-- Single source of truth for all modules  
-- Ensures consistency across risk, response, and pricing  
+- Single source of truth  
+- Ensures consistency across modules  
 
 ---
 
@@ -114,8 +99,7 @@ data/response_modeling/
   processed/
     response_modeling_features.csv
 
-- Generated within module pipelines  
-- Encapsulates module-specific transformations  
+- Encapsulated transformations per module  
 
 ---
 
@@ -137,9 +121,8 @@ Responsible for:
 
 ### Modeling Layer
 
-- trains predictive models  
-- outputs probabilities (not decisions)  
-- independent of business rules  
+- outputs probabilities (NOT decisions)  
+- independent from business constraints  
 
 ---
 
@@ -148,11 +131,10 @@ Responsible for:
 - converts predictions into actions  
 
 Examples:
-- approval thresholding  
-- risk adjustment  
+- approval thresholds  
 - expected value computation  
 - offer selection  
-- final decision policy  
+- policy rules  
 
 ---
 
@@ -171,43 +153,89 @@ Examples:
 ### Module 01 — Credit Approval
 
 - estimates probability of default  
-- applies approval threshold  
-- outputs base risk signal  
+- outputs core risk signal  
 
 ---
 
 ### Module 02 — Response Modeling
 
-- predicts probability of customer acceptance  
-- introduces behavioral dimension  
+- predicts probability of acceptance  
+- captures customer behavior  
 
 ---
 
 ### Module 03 — Pricing Strategy
 
-- evaluates multiple APR offers  
+- evaluates multiple offers  
 - computes:
   - expected revenue  
   - expected loss  
   - expected value  
 
-- selects best offer per customer  
+- selects optimal offer per customer  
 
 ---
 
 ### Module 04 — Decision Policy
 
 - applies business constraints:
-  - risk threshold  
-  - acceptance threshold  
-  - economic viability  
+  - max risk threshold  
+  - minimum acceptance threshold  
+  - minimum profitability  
 
-- assigns:
-  - approve (with offer)  
+- supports multi-strategy decisioning:
+  - conservative  
+  - balanced  
+  - aggressive  
+  - aggressive_with_risk_cap  
+
+- includes:
+  - hard risk caps  
+  - manual review routing for borderline cases  
+
+- outputs:
+  - approve  
   - decline  
-  - manual review  
+  - manual_review  
 
-- produces portfolio-level outputs  
+IMPORTANT:
+This layer uses **point estimates only** and is fully deterministic.
+
+---
+
+### Module 05 — Bayesian Decision Layer (NEW)
+
+This module introduces uncertainty-aware evaluation.
+
+Purpose:
+- model uncertainty around predictions (p_default, p_accept)  
+- propagate uncertainty into expected value  
+- evaluate downside risk and decision robustness  
+
+Key characteristics:
+- reads from pricing outputs (best_offers.csv)  
+- does NOT retrain models  
+- does NOT replace decision policy (initially)  
+- operates as a downstream evaluation layer  
+
+Core idea:
+
+Instead of:
+EV = fixed value  
+
+We model:
+EV ~ distribution  
+
+Outputs include:
+- expected value distribution  
+- downside risk metrics  
+- tail loss metrics  
+- probability of negative outcomes  
+
+This layer enables:
+- risk-aware decision analysis  
+- stress testing of portfolio decisions  
+- improved interpretability of uncertainty  
 
 ---
 
@@ -217,19 +245,14 @@ artifacts/
   credit_approval/
   response_modeling/
   pricing_strategy/
-
-Outputs include:
-- trained models  
-- scalers  
-- feature columns  
-- scored datasets  
-- final decision outputs  
+  decision_policy/
+  bayesian_decision/   ← NEW
 
 ---
 
 ## Runner
 
-`runner.py` executes the full pipeline:
+`runner.py` executes the main pipeline:
 
 1. Data generation  
 2. Feature engineering  
@@ -238,7 +261,7 @@ Outputs include:
 5. Pricing strategy  
 6. Decision policy  
 
-This enables reproducible, end-to-end execution.
+Bayesian layer is executed separately (for now).
 
 ---
 
@@ -247,29 +270,29 @@ This enables reproducible, end-to-end execution.
 ### Separation of Concerns
 
 - modeling ≠ decision making  
-- predictions ≠ actions  
+- point estimates ≠ uncertainty evaluation  
 
 ---
 
-### Deterministic Pipelines
+### Deterministic Core
 
-- reproducible runs  
-- explicit transformations  
-- no hidden logic  
+- base pipeline remains deterministic  
+- Bayesian layer adds probabilistic analysis on top  
 
 ---
 
 ### Modular Isolation
 
 - each module owns its logic  
-- clean interfaces between modules  
+- Bayesian layer does not break existing modules  
 
 ---
 
 ### Business Alignment
 
-- each module maps to a real banking function  
-- outputs are decision-ready  
+- each module maps to real-world banking functions  
+- decision policy reflects operational constraints  
+- Bayesian layer reflects risk management / stress testing  
 
 ---
 
@@ -277,41 +300,51 @@ This enables reproducible, end-to-end execution.
 
 The system supports:
 
-- risk estimation (default probability)  
+- risk estimation  
 - customer behavior modeling  
-- multi-offer pricing evaluation  
-- expected value optimization  
+- multi-offer pricing optimization  
 - policy-based decisioning  
-- portfolio-level diagnostics  
-- sensitivity analysis of policy thresholds  
+- strategy comparison  
+- sensitivity analysis  
+
+NEW capability:
+- uncertainty-aware decision evaluation  
 
 ---
 
 ## System Behavior
 
-The final portfolio is governed by three competing forces:
+The portfolio is governed by three forces:
 
-- risk control  
-- customer acceptance  
+- risk  
+- acceptance  
 - profitability  
 
-The system produces decisions through tradeoffs between these constraints rather than optimizing a single objective.
+The Bayesian layer adds a fourth dimension:
+
+- uncertainty / downside risk  
 
 ---
 
 ## Next possible Extensions
 
-Planned enhancements:
-
-- threshold optimization  
-- constrained portfolio optimization  
-- Bayesian uncertainty modeling  
-- reinforcement learning for policy selection  
+- Bayesian-informed decision policy integration  
+- portfolio-level risk constraints  
+- reinforcement learning for decision policies  
+- scenario-based stress testing  
 
 ---
 
 ## Final Takeaway
 
-This system is not a collection of independent models.
+This system is not just a collection of models.
 
-It is a structured decision pipeline that integrates risk, behavior, and economics to produce actionable business decisions.
+It is a structured decision pipeline that:
+
+- separates prediction from decision  
+- separates decision from uncertainty evaluation  
+
+This mirrors real-world credit systems where:
+- models generate signals  
+- policies enforce constraints  
+- risk layers evaluate uncertainty

@@ -1,7 +1,0 @@
-decision_reason,count,rate
-risk_too_high,4575,0.4575
-low_acceptance_probability,3499,0.3499
-negative_expected_value,1677,0.1677
-approved_high_margin,222,0.0222
-review_flag_triggered,19,0.0019
-approved_profitable_balanced,8,0.0008

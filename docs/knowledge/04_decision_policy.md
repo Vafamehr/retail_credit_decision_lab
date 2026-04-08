@@ -1,168 +1,262 @@
-# Module 04 — Decision Policy
+# Decision Policy — Knowledge Guide
 
-## 1. Objective
+## Overview
 
-Translate model outputs into actionable business decisions.
+The Decision Policy layer is responsible for converting model outputs into final business actions.
 
-Inputs:
-- default risk (adjusted_p_default)
-- acceptance probability (p_accept)
-- expected value (expected_value)
-- selected offer (APR)
+Upstream modules produce signals:
+- p_default (risk)
+- p_accept (behavior)
+- expected_value (economics)
 
-Output:
-- final decision (approve / decline / review)
-- decision reason
-- policy segment
+This layer determines:
 
+approve / decline / manual_review
 
 ---
 
-## 2. Decision Framework
+## Core Principle
 
-The system applies a sequential decision policy:
+This layer is:
 
-1. Risk filter  
-   Reject customers outside risk appetite
+- deterministic  
+- interpretable  
+- parameter-driven  
 
-2. Economic filter  
-   Reject customers with non-positive expected value
+It does NOT learn from data.
 
-3. Acceptance filter  
-   Reject customers with low probability of accepting the offer
-
-4. Manual review  
-   Route flagged cases for human evaluation
-
-5. Final approval  
-   Assign offer based on pricing output
-
+It enforces business rules on top of model outputs.
 
 ---
 
-## 3. Policy Segmentation
+## Why This Layer Exists
 
-Customers are segmented based on adjusted default probability:
+Models alone are not enough.
 
-- low_risk
-- medium_risk
-- high_risk
-- outside_risk_appetite
+Example:
 
-This enables analysis of decision behavior across risk tiers.
+- high expected value but very risky → not acceptable  
+- low risk but low acceptance → not useful  
+- profitable but borderline → needs review  
 
+Decision Policy ensures:
 
----
-
-## 4. Key Findings
-
-### Risk as a hard gate
-
-A large portion of customers are rejected immediately due to risk.
-
-Insight:
-Risk acts as a strict eligibility constraint, removing nearly half of the population before other factors are considered.
-
+- risk control  
+- business alignment  
+- operational consistency  
 
 ---
 
-### Acceptance probability as a major bottleneck
+## Inputs
 
-Among eligible customers, many are rejected due to low acceptance probability.
+From pricing layer (best_offers.csv):
 
-Insight:
-Customer behavior (conversion likelihood) is a dominant constraint, even for otherwise viable customers.
-
-
----
-
-### Expected value as a secondary filter
-
-Expected value removes some customers but less than acceptance probability.
-
-Insight:
-Profitability matters, but most filtering occurs earlier in the pipeline.
-
+- p_default  
+- p_accept  
+- expected_value  
+- offer_name  
 
 ---
 
-### High APR dominance
+## Output
 
-Most approved customers receive high APR offers.
+Final decision:
 
-Insight:
-The system prioritizes profitability, concentrating approvals in high-margin segments.
+- approve  
+- decline  
+- manual_review  
 
-
----
-
-## 5. Sensitivity Analysis (Policy Tradeoffs)
-
-Policy thresholds were varied across:
-
-- acceptance threshold
-- default threshold
-
-### Acceptance threshold (primary driver)
-
-Lower threshold:
-- approval rate increases significantly (~2% → ~25%)
-- total expected value increases substantially
-- average risk increases
-- acceptance quality decreases
-
-Higher threshold:
-- approval collapses
-- portfolio becomes highly selective
-- expected value drops sharply
-
-Insight:
-Acceptance threshold is the dominant control lever for portfolio size and revenue.
-
+Additional outputs:
+- decision_reason  
+- policy_segment  
 
 ---
 
-### Default threshold (secondary driver)
+## Core Decision Logic
 
-Higher threshold:
-- gradual increase in approvals
-- gradual increase in portfolio risk
+The decision is governed by constraints:
 
-Lower threshold:
-- tighter risk control
-- reduced approval volume
+### 1. Risk Constraint
 
-Insight:
-Risk threshold acts as a fine-tuning mechanism rather than a primary driver.
+Reject high-risk customers:
 
+p_default > max_p_default → decline
 
 ---
 
-## 6. System Interpretation
+### 2. Acceptance Constraint
 
-The final portfolio is governed by three competing forces:
+Avoid unlikely conversions:
 
-- risk control (stability)
-- acceptance probability (customer behavior)
-- expected value (profitability)
-
-Insight:
-The system is more sensitive to acceptance constraints than to risk thresholds, indicating that customer behavior is a key limiting factor in portfolio growth.
-
+p_accept < min_p_accept → decline
 
 ---
 
-## 7. Key Takeaway
+### 3. Profitability Constraint
 
-The decision policy transforms predictive models into a constrained optimization system, where final outcomes emerge from tradeoffs between risk, conversion, and economic value.
+Avoid negative economics:
 
+expected_value < min_expected_value → decline
 
 ---
 
-## 8. Extensions
+### 4. Risk Cap (Hard Guardrail)
 
-Natural next steps:
+Even aggressive strategies respect:
 
-- threshold optimization
-- constrained portfolio optimization
-- reinforcement learning for policy selection
+p_default > risk_cap → force decline
+
+---
+
+### 5. Manual Review Logic
+
+For borderline but valuable cases:
+
+- moderate risk  
+- positive expected value  
+- flagged for review  
+
+These are routed to:
+
+manual_review
+
+---
+
+## Multi-Strategy Framework
+
+Different parameter sets represent different business strategies:
+
+### Conservative
+- low risk tolerance  
+- low approval rate  
+
+### Balanced
+- moderate thresholds  
+
+### Aggressive
+- higher approvals  
+- higher risk  
+
+### Aggressive with Risk Cap (Best Performing)
+- pushes approvals  
+- enforces strict upper risk bound  
+
+---
+
+## Why Multiple Strategies
+
+Real systems do not operate with a single fixed rule.
+
+They evaluate trade-offs between:
+- growth  
+- risk  
+- profitability  
+
+Strategy comparison enables:
+
+- scenario analysis  
+- policy tuning  
+- portfolio optimization  
+
+---
+
+## Key Insight
+
+Decision Policy is NOT about prediction.
+
+It is about:
+
+**control**
+
+---
+
+## Separation of Concerns
+
+This is critical:
+
+| Layer | Responsibility |
+|------|--------|
+| Risk Model | estimate default probability |
+| Response Model | estimate acceptance |
+| Pricing | optimize expected value |
+| Decision Policy | enforce business rules |
+
+---
+
+## Limitations of Current Approach
+
+All decisions rely on:
+
+point estimates
+
+Example:
+
+p_default = 0.16  
+expected_value = 1200  
+
+This assumes:
+- predictions are exact  
+- no uncertainty  
+
+This is unrealistic.
+
+---
+
+## Motivation for Next Layer (Bayesian)
+
+The Decision Policy does NOT account for:
+
+- uncertainty in predictions  
+- downside risk  
+- variability in outcomes  
+
+Example issue:
+
+Two customers:
+
+- both EV = 1000  
+
+But:
+
+- one stable  
+- one highly uncertain  
+
+Current system treats them equally.
+
+---
+
+## What Bayesian Layer Will Add
+
+The next module introduces:
+
+uncertainty-aware evaluation
+
+Instead of:
+
+EV = fixed  
+
+We move to:
+
+EV ~ distribution  
+
+This enables:
+
+- downside risk measurement  
+- probability of loss  
+- tail risk analysis  
+
+---
+
+## Final Takeaway
+
+Decision Policy is:
+
+- rule-based  
+- interpretable  
+- business-aligned  
+
+It converts predictions into actions.
+
+But it assumes certainty.
+
+The Bayesian layer extends this by evaluating how reliable those decisions actually are.

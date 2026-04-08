@@ -77,6 +77,14 @@ RESPONSE_FEATURE_COLUMNS_PATH = RESPONSE_MODELING_MODEL_DIR / "feature_columns.p
 
 
 # =========================
+# NEW (STEP 1 FIX)
+# =========================
+
+# Decision policy
+DECISION_POLICY_ARTIFACT_DIR = ARTIFACTS_DIR / "decision_policy"
+
+
+# =========================
 # PRICING / RISK SETTINGS
 # =========================
 
