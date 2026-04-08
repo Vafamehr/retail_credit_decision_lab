@@ -1,8 +1,41 @@
+# Virtual environment
+
 venv/
-__pycache__/
+.env/
+
+# Python cache
+
+**pycache**/
 *.pyc
 *.pyo
-.env
+
+# Jupyter
+
 .ipynb_checkpoints/
+
+# Local / personal files
+
 personal/
 
+# OS files
+
+.DS_Store
+Thumbs.db
+
+# Pytest
+
+.pytest_cache/
+
+# Logs
+
+*.log
+
+# IDE
+
+.vscode/
+.idea/
+
+# Artifacts (keep structure, ignore contents)
+
+artifacts/*
+!artifacts/.gitkeep
