@@ -94,7 +94,7 @@ APR_OPTIONS = {
     "high_apr": 0.24,
 }
 
-LOSS_GIVEN_DEFAULT = 0.45
+LOSS_GIVEN_DEFAULT = 0.3
 
 
 # =========================

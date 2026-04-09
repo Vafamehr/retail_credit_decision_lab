@@ -2,22 +2,24 @@
 
 ## Overview
 
-This project implements an end-to-end retail credit decision system.
+This project builds an end-to-end retail credit decision system.
 
-The focus is not just on prediction, but on turning model outputs into actual business decisions by combining risk, customer behavior, and economics.
+The goal is not just predicting outcomes, but turning those predictions into real decisions using risk, customer behavior, and economics.
 
-Pipeline flow: Data -> Risk -> Response -> Pricing -> Decision, with an additional uncertainty (Bayesian) evaluation layer.
+Pipeline flow:
+
+Data -> Risk -> Response -> Pricing -> Decision -> Bayesian Evaluation
 
 ---
 
 ## What This Does
 
-* estimates probability of default (PD) using a risk model
-* predicts customer acceptance using a response model
-* evaluates multiple offers using expected value
-* selects the optimal offer per customer
-* applies a final decision policy (approve / decline / review)
-* evaluates how stable those decisions are under uncertainty
+- estimate probability of default (PD) from a risk model  
+- predict customer acceptance from a response model  
+- evaluate multiple offers using expected value  
+- select the best offer per customer  
+- apply a decision policy (approve / reject / review)  
+- check how stable those decisions are under uncertainty  
 
 ---
 
@@ -25,88 +27,83 @@ Pipeline flow: Data -> Risk -> Response -> Pricing -> Decision, with an addition
 
 ### Module 01 — Credit Approval
 
-* predicts default risk
-* produces the base risk signal used throughout the system
+- predicts default probability  
+- produces the core risk signal used across the system  
 
 ---
 
 ### Module 02 — Response Modeling
 
-* predicts probability of accepting an offer
-* introduces the behavioral component
+- predicts probability of accepting an offer  
+- adds the behavioral component  
 
 ---
 
 ### Module 03 — Pricing Strategy
 
-* evaluates multiple offers (e.g., APR levels)
+- evaluates multiple offers (APR levels)
 
-* computes:
+- computes:
 
-  * expected revenue
-  * expected loss
-  * expected value
+  - expected revenue -> upside if the loan performs  
+  - expected loss -> downside if default happens  
+  - expected value -> final risk-adjusted profit  
 
-* selects the best offer per customer
+- selects the best offer per customer  
 
 ---
 
 ### Module 04 — Decision Policy
 
-* applies business constraints:
+- applies business rules:
 
-  * risk thresholds
-  * acceptance thresholds
-  * profitability requirements
+  - risk thresholds  
+  - acceptance thresholds  
+  - profitability requirements  
 
-* supports multiple strategies:
+- supports multiple strategies:
 
-  * conservative
-  * balanced
-  * aggressive
-  * aggressive_with_risk_cap
+  - conservative  
+  - balanced  
+  - aggressive  
+  - aggressive_with_risk_cap  
 
-* produces final decisions:
+- outputs:
 
-  * approve (with offer)
-  * decline
-  * manual review
-
-* includes rule-based reasoning and portfolio diagnostics
+  - approve  
+  - reject  
+  - review  
 
 ---
 
 ### Module 05 — Bayesian Decision Layer
 
-* evaluates decisions under uncertainty
-* treats model outputs (PD, acceptance, EV) as uncertain rather than fixed
-* simulates possible outcomes and measures downside risk
+- evaluates decisions under uncertainty  
+- treats PD and acceptance as distributions, not fixed values  
+- simulates outcomes and focuses on downside risk  
 
-This layer answers:
+outputs include:
 
-"How reliable is this decision if our estimates are slightly wrong?"
+- simulated expected value  
+- probability of loss  
+- p05 -> bad-case outcome  
+- expected shortfall -> average loss in worst cases  
 
-Outputs include:
-
-* expected value distribution
-* probability of loss
-* lower-tail outcomes
-* risk-aware evaluation of decisions
-
-This layer is implemented separately and does not modify the core decision policy.
+this layer does not change the decision policy  
+it checks how reliable the decisions are  
 
 ---
 
 ## Key Idea
 
-This is not a collection of independent models.
+this is not a set of independent models
 
-It is a structured decision system:
+it is a decision system:
 
-* models estimate probabilities
-* pricing converts predictions into economic value
-* policy enforces business rules
-* Bayesian layer evaluates uncertainty and risk
+- models -> estimate probabilities  
+- pricing -> converts predictions into money  
+- policy -> enforces business rules  
+- Bayesian layer -> checks robustness  
 
 Decision = f(Risk, Response, Economics)
 
@@ -114,62 +111,49 @@ Decision = f(Risk, Response, Economics)
 
 ## Example Insights
 
-* risk filtering removes a large portion of customers upfront
-* acceptance probability is often the main bottleneck
-* expected value acts as a secondary filter
-* high-return offers tend to dominate approvals
-* some decisions look profitable but are fragile under uncertainty
+- acceptance is often the main bottleneck  
+- high default risk quickly kills profitability  
+- strong offers can offset moderate risk  
+- some deals look profitable on average but fail under uncertainty  
+- Bayesian layer helps detect fragile decisions  
 
 ---
 
 ## Policy Tradeoffs
 
-Sensitivity analysis shows:
+- relaxing thresholds:
 
-* acceptance threshold strongly affects approval volume
-* risk threshold controls portfolio quality
+  - more approvals  
+  - higher expected value  
+  - higher risk  
 
-Typical behavior:
+- tightening thresholds:
 
-* relaxing acceptance thresholds:
-
-  * increases approvals
-  * increases total expected value
-  * increases risk
-
-* tightening acceptance thresholds:
-
-  * reduces approvals
-  * improves portfolio quality
-  * reduces revenue
-
----
-
-## Example Results
-
-* approval rate ranges from near 0% to ~25% depending on policy
-* expected value increases with approval volume
-* average risk rises as thresholds are relaxed
-* outcomes reflect tradeoffs, not a single objective
+  - fewer approvals  
+  - better portfolio quality  
+  - lower revenue  
 
 ---
 
 ## How to Run
 
+run full pipeline:
+
 python runner.py
 
-Bayesian layer (run separately):
+this runs everything including:
 
-python -m src.bayesian_decision.pipeline
+- deterministic pipeline  
+- Bayesian uncertainty + decision layer  
 
 ---
 
 ## Final Note
 
-The system separates three concerns:
+the system separates three things:
 
-* prediction (models)
-* decision (policy)
-* uncertainty (Bayesian evaluation)
+- prediction -> models  
+- decision -> policy  
+- uncertainty -> Bayesian evaluation  
 
-This mirrors how real-world credit systems are designed.
+this is how real credit systems are structured

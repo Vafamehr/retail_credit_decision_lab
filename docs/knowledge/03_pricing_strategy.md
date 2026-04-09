@@ -6,7 +6,7 @@ After estimating risk and response, the key question becomes:
 
 Which offer should we give to each customer to maximize business value?
 
-This is a decision problem under uncertainty.
+This is a decision problem, not a modeling problem.
 
 ---
 
@@ -15,15 +15,17 @@ This is a decision problem under uncertainty.
 A bank makes money only if:
 
 - the customer accepts the offer  
-- the loan performs (does not default)  
+- the loan performs (no default)  
 
-This creates a three-way trade-off:
+This creates a trade-off:
 
-- higher interest rate → higher margin but lower acceptance  
-- lower interest rate → higher acceptance but lower margin  
-- higher risk → higher losses  
+- higher interest rate -> higher margin, lower acceptance  
+- lower interest rate -> higher acceptance, lower margin  
+- higher risk -> higher expected loss  
 
-The goal is to choose offers that maximize expected profit, not just approval or acceptance.
+The goal is not to maximize approvals or acceptance.
+
+The goal is to maximize expected profit.
 
 ---
 
@@ -31,11 +33,11 @@ The goal is to choose offers that maximize expected profit, not just approval or
 
 This module combines:
 
-- Risk → P(default)  
-- Response → P(accept)  
-- Economics → revenue, cost, loss  
+- Risk -> P(default)  
+- Response -> P(accept)  
+- Economics -> revenue and loss  
 
-Into a single decision:
+Into one decision signal:
 
 Decision = f(Risk, Response, Economics)
 
@@ -45,7 +47,7 @@ Decision = f(Risk, Response, Economics)
 
 Pipeline:
 
-Response Data → Base Risk → Risk Adjustment → Value Scoring → Offer Selection
+Response Data -> Base Risk -> Risk Adjustment -> Value Scoring -> Offer Selection
 
 ---
 
@@ -57,53 +59,61 @@ From previous modules:
 - predicted acceptance probability  
 - customer and loan features  
 
-Plus offer definitions:
+From offer setup:
 
 - interest rate  
 - loan amount  
-- derived payment metrics  
+- payment-related features  
 
 ---
 
 ## 6. Risk Adjustment
 
-Risk is adjusted per offer to reflect pricing effects.
+Risk is adjusted per offer.
 
 Higher interest rates slightly increase default probability.
 
-This introduces:
+Output:
 
 adjusted_p_default
 
-which is used for economic calculations.
+This reflects that pricing affects behavior and risk.
 
 ---
 
 ## 7. Value Scoring (Core Engine)
 
-For each customer-offer pair, compute expected value.
+For each customer-offer pair, compute economic value.
 
-### Step 1 — Expected Credit Cost
+### Step 1 — Expected Revenue
 
-expected_credit_cost_rate = adjusted_p_default × LGD
+expected_revenue -> upside if loan performs
+
+Based on:
+
+loan_amount × (interest_rate − costs)
 
 ---
 
-### Step 2 — Unit Margin
+### Step 2 — Expected Loss
 
-unit_margin = interest_rate − expected_credit_cost − funding_cost − servicing_cost
+expected_loss -> downside if default occurs
+
+Based on:
+
+loan_amount × LGD
 
 ---
 
 ### Step 3 — Expected Value
 
-expected_value = P(accept) × loan_amount × unit_margin
+expected_value = P(accept) × [(1 − P(default)) × revenue − P(default) × loss]
 
 This captures:
 
 - probability of booking  
-- profitability of the loan  
-- risk-adjusted loss  
+- profit if successful  
+- loss if default  
 
 Negative values are allowed.
 
@@ -113,13 +123,14 @@ Negative values are allowed.
 
 For each customer:
 
-- filter offers with:
+- filter offers:
+
   - expected_value > 0  
-  - P(accept) ≥ threshold  
+  - P(accept) above threshold  
 
-- choose the offer with highest expected value  
+- select the offer with highest expected value  
 
-If no offer meets criteria:
+If no offer qualifies:
 
 no_offer
 
@@ -128,8 +139,8 @@ no_offer
 ## 9. Outputs
 
 - selected offer per customer  
-- expected value per decision  
-- selection reason (positive, low acceptance, negative value)  
+- expected value  
+- selection reason  
 
 Stored in:
 
@@ -139,65 +150,58 @@ artifacts/pricing_strategy/
 
 ## 10. Key Observations
 
-- high_apr → highest margin, lower acceptance, strongest profitability  
-- mid_apr → balanced trade-off  
-- low_apr → high acceptance but often unprofitable  
+- high_apr -> higher margin, lower acceptance, often strong EV  
+- mid_apr -> balanced option  
+- low_apr -> higher acceptance but often weak economics  
 
 The system naturally filters:
 
-- profitable customers → receive offers  
-- unprofitable customers → no_offer  
+- profitable customers -> receive offers  
+- unprofitable customers -> no_offer  
 
 ---
 
 ## 11. Why This Matters
 
-This is where models become decisions.
+This is where predictions turn into actions.
 
-Instead of:
+Before this:
 
-- predicting risk  
-- predicting behavior  
+- models estimate probabilities  
 
-The system now:
+Here:
 
-- selects actions  
-- controls profitability  
-- enforces constraints  
+- the system chooses what to do  
 
 ---
 
 ## 12. Limitations
 
 - simplified cost structure  
-- static parameters (LGD, costs)  
+- fixed LGD and cost assumptions  
 - no uncertainty modeling  
-- no dynamic optimization  
+- no dynamic pricing  
 
 ---
 
 ## 13. Interview Summary
 
-Built a pricing decision system that combines risk, response, and economic assumptions to compute expected value for each offer and select the optimal action, including a no-offer option when no profitable opportunity exists.
+Built a pricing system that combines risk, response, and economics to compute expected value for each offer and select the best action per customer, including a no-offer option when no profitable opportunity exists.
 
 ---
 
 ## 14. What Comes Next
 
-Next step is adding uncertainty:
+Next step:
 
-Expected Value = f(Risk, Response, Economics, Uncertainty)
+Add uncertainty to evaluate how stable these decisions are.
 
-This enables:
-
-- Bayesian decisioning  
-- confidence-aware policies  
-- exploration vs exploitation (RL)  
+Expected Value -> becomes distribution-aware
 
 ---
 
 ## Final Takeaway
 
-This module transforms predictions into economic decisions.
+This module converts predictions into economic decisions.
 
-It is the point where data science directly drives business value.
+It is the point where data science directly impacts business outcomes.

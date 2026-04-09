@@ -12,7 +12,7 @@ This is a behavioral prediction problem focused on conversion.
 
 ## 2. Business Context
 
-Banks do not make money by approving customers.
+Banks do not make money by approvals alone.
 
 They make money when:
 
@@ -22,20 +22,20 @@ They make money when:
 Without response modeling:
 
 - approved customers may reject offers  
-- marketing spend is wasted  
-- pricing decisions are blind  
+- marketing spend is inefficient  
+- pricing decisions lack feedback  
 
 With response modeling:
 
-- target customers likely to accept  
-- improve conversion rates  
-- support pricing and targeting strategies  
+- focus on customers likely to convert  
+- improve acceptance rates  
+- support pricing and targeting decisions  
 
 ---
 
 ## 3. Core Concept
 
-Risk and behavior are different.
+Risk and behavior are separate signals.
 
 Credit Risk Model:  
 P(default | customer)
@@ -46,9 +46,9 @@ P(accept | customer, offer, relationship)
 A customer can be:
 
 - low risk but not interested  
-- high risk but highly responsive  
+- higher risk but highly responsive  
 
-Both signals must be modeled separately.
+Both must be modeled independently.
 
 ---
 
@@ -56,13 +56,13 @@ Both signals must be modeled separately.
 
 Pipeline:
 
-Shared Features → Offer Simulation → Relationship Features → Behavior Simulation → Model → Evaluation
+Shared Features -> Offer Simulation -> Relationship Features -> Behavior Simulation -> Model -> Evaluation
 
 ---
 
 ## 5. Data Construction
 
-Response modeling depends on both the customer and the offer.
+Response depends on both the customer and the offer.
 
 ### Customer Features
 
@@ -80,10 +80,7 @@ Response modeling depends on both the customer and the offer.
 - estimated_monthly_payment  
 - payment_to_income_ratio  
 
-Derived from:
-
-- loan characteristics  
-- pricing assumptions  
+These reflect pricing and affordability.
 
 ---
 
@@ -93,27 +90,27 @@ Derived from:
 - relationship_tenure  
 - product_count  
 
-Capture customer engagement and loyalty.
+These capture engagement and familiarity.
 
 ---
 
 ### Acceptance Simulation
 
-A behavioral score is constructed using:
+Behavior is constructed using:
 
-- affordability (payment_to_income)  
-- pricing (interest rate)  
+- affordability -> payment-to-income  
+- pricing -> interest rate  
 - risk signals  
 - relationship strength  
-- randomness (noise)  
+- randomness  
 
 Then transformed:
 
-sigmoid(score) → response_probability
+sigmoid(score) -> response_probability  
 
 Then sampled:
 
-accepted_offer ∈ {0,1}
+accepted_offer ∈ {0, 1}
 
 ---
 
@@ -127,11 +124,11 @@ Purpose:
 
 Estimate probability of acceptance
 
-Focus is on:
+Focus:
 
-- clean structure  
-- interpretable behavior  
-- stable baseline  
+- interpretability  
+- stable baseline behavior  
+- clean separation from risk model  
 
 ---
 
@@ -139,13 +136,13 @@ Focus is on:
 
 ### AUC
 
-Measures ranking quality:
+Measures ranking ability:
 
-Ability to distinguish high vs low responders
+How well the model separates high vs low responders
 
 Result:
 
-~0.69 → realistic for behavioral modeling
+~0.69 -> realistic for this type of problem
 
 ---
 
@@ -160,23 +157,20 @@ Result:
 
 Predicted ≈ Actual
 
-This is critical for:
-
-- campaign planning  
-- expected conversion forecasting  
+This is important for forecasting conversion.
 
 ---
 
 ### Decile Analysis
 
-Customers grouped into buckets by predicted probability.
+Customers grouped by predicted probability.
 
 Used for:
 
-- targeting strategies  
-- campaign prioritization  
+- targeting campaigns  
+- prioritizing outreach  
 
-Top deciles show significantly higher acceptance rates.
+Top deciles show higher acceptance rates.
 
 ---
 
@@ -195,15 +189,15 @@ artifacts/response_modeling/
 
 ## 9. Role in System
 
-Module 01 provides:
+Module 01:
 
 P(default)
 
-Module 02 provides:
+Module 02:
 
 P(accept)
 
-Together they enable:
+Together:
 
 Decision = f(Risk, Response)
 
@@ -212,17 +206,17 @@ Decision = f(Risk, Response)
 ## 10. Limitations
 
 - synthetic data  
-- no causal inference  
+- no causal modeling  
 - no optimization layer  
 - simple model  
 
-These are intentional to keep the system interpretable and modular.
+These keep the system interpretable and modular.
 
 ---
 
 ## 11. Interview Summary
 
-Built a response modeling system that incorporates customer, offer, and relationship features to predict acceptance probability, validated through calibration and decile analysis to support targeting and pricing decisions.
+Built a response model using customer, offer, and relationship features to estimate acceptance probability, validated through calibration and decile analysis, and used to support targeting and pricing decisions.
 
 ---
 
@@ -232,14 +226,12 @@ Next step:
 
 Combine Risk + Response + Economics
 
-To compute:
-
-Which offers maximize expected value
+to determine which offers are worth making.
 
 ---
 
 ## Final Takeaway
 
-This module captures how customers respond to offers.
+This module captures customer behavior.
 
-It complements risk modeling and enables decision-making based on both behavior and economics.
+It complements risk modeling and enables decisions based on both likelihood of default and likelihood of acceptance.

@@ -6,32 +6,34 @@ In lending systems, the core question is:
 
 Should we approve this customer for a loan?
 
-This is a risk decision problem where the objective is to control default risk while maintaining approval volume.
+This is a risk decision problem where the goal is to control default risk while maintaining approval volume.
 
 ---
 
 ## 2. Business Context
 
-Banks operate under a clear trade-off:
+Banks operate under a trade-off:
 
-- higher approval rate → more revenue but higher risk  
-- lower approval rate → safer portfolio but reduced volume  
+- higher approval rate -> more revenue, higher risk  
+- lower approval rate -> safer portfolio, lower volume  
 
-The goal is to find a balance that satisfies risk constraints while maximizing approvals.
+The objective is not to eliminate risk, but to control it within acceptable limits.
 
 ---
 
 ## 3. System Overview
 
-This module implements a full credit decision pipeline:
+This module builds the risk layer of the system:
 
-Data → Features → Risk Model → Threshold Optimization → Decision Policy → Evaluation
+Data -> Features -> Risk Model -> Threshold Optimization -> Decision
+
+This is the foundation for everything downstream.
 
 ---
 
 ## 4. Data Generation
 
-A synthetic borrower population is created with realistic features:
+A synthetic borrower population is created with realistic attributes:
 
 - income  
 - credit score  
@@ -43,20 +45,20 @@ A synthetic borrower population is created with realistic features:
 
 ### Risk Construction
 
-Default risk is generated using:
+Default probability is generated using:
 
-- linear effects (credit score, DTI, utilization)  
-- interaction effects (DTI × utilization)  
-- threshold effects (low credit score penalty)  
-- extreme risk spikes  
+- linear effects -> credit score, DTI, utilization  
+- interaction effects -> DTI × utilization  
+- threshold effects -> penalties for low credit score  
+- extreme risk spikes -> high-risk segments  
 
-The final probability is produced using a sigmoid transformation and converted to a binary default outcome.
+The final probability is passed through a sigmoid and converted into a binary default outcome.
 
 ---
 
 ## 5. Feature Engineering
 
-Engineered features include:
+Derived features include:
 
 - loan-to-income ratio  
 - high utilization indicator  
@@ -64,7 +66,7 @@ Engineered features include:
 - employment stability  
 - interaction terms  
 
-These features reflect common patterns used in real credit risk modeling.
+These reflect common signals used in real underwriting systems.
 
 ---
 
@@ -80,17 +82,19 @@ Estimate probability of default (PD)
 
 Output:
 
-predicted_risk ∈ [0,1]
+predicted_risk ∈ [0, 1]
+
+This output is not a decision — it is an input to the decision layer.
 
 ---
 
 ## 7. Decision Layer
 
-Predictions are converted into decisions using thresholding.
+Predictions are converted into actions using thresholding.
 
 ### Threshold Optimization
 
-A threshold is selected such that:
+The threshold is chosen such that:
 
 Default Rate (Approved) ≤ 15%
 
@@ -98,7 +102,7 @@ While maximizing:
 
 Approval Rate
 
-This enforces a portfolio-level risk constraint rather than relying on arbitrary cutoffs.
+This enforces a portfolio-level constraint instead of relying on arbitrary cutoffs.
 
 ---
 
@@ -106,11 +110,11 @@ This enforces a portfolio-level risk constraint rather than relying on arbitrary
 
 Customers are segmented into:
 
-- Approve → low risk  
-- Reject → high risk  
-- Review → borderline cases  
+- Approve -> low risk  
+- Reject -> high risk  
+- Review -> borderline cases  
 
-This reflects standard underwriting workflows.
+This mirrors real underwriting workflows.
 
 ---
 
@@ -125,7 +129,9 @@ This reflects standard underwriting workflows.
 
 ### Calibration
 
-Compare predicted risk vs actual default rate across bins to ensure probabilities are reliable.
+Predicted risk is compared with actual default rates across bins.
+
+This ensures the model’s probabilities are usable for downstream decisions.
 
 ---
 
@@ -134,7 +140,7 @@ Compare predicted risk vs actual default rate across bins to ensure probabilitie
 - customer-level decisions  
 - predicted risk scores  
 - calibration tables  
-- trained model and preprocessing artifacts  
+- trained model artifacts  
 
 Stored in:
 
@@ -144,9 +150,9 @@ artifacts/credit_approval/
 
 ## 11. Key Insight
 
-Prediction is not the end goal.
+This module does not maximize accuracy.
 
-The system converts risk estimates into controlled decisions under business constraints.
+It converts risk estimates into controlled decisions under a business constraint.
 
 ---
 
@@ -155,16 +161,16 @@ The system converts risk estimates into controlled decisions under business cons
 - synthetic data  
 - simple model (logistic regression)  
 - static threshold  
-- no pricing or profitability layer  
+- no pricing or profitability integration  
 
 ---
 
 ## 13. Interview Summary
 
-Built a credit approval system that estimates default probability and converts it into decisions using threshold optimization under a risk constraint, with evaluation focused on approval rate, default control, and calibration.
+Built a credit approval system that estimates default probability and converts it into decisions using threshold optimization under a risk constraint, balancing approval rate and portfolio risk while ensuring calibration.
 
 ---
 
 ## Final Takeaway
 
-This module focuses on turning risk predictions into controlled, constraint-driven decisions.
+This module establishes the risk backbone of the system. All downstream decisions depend on the quality and calibration of this signal.

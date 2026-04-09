@@ -15,7 +15,6 @@ from src.utils.schema import (
 
 FUNDING_COST = 0.03
 SERVICING_COST = 0.015
-VALUE_SCALING_FACTOR = 0.5
 
 
 def score_offers(df: pd.DataFrame) -> pd.DataFrame:
@@ -44,32 +43,24 @@ def score_offers(df: pd.DataFrame) -> pd.DataFrame:
             f"Value scoring requires one of '{P_ACCEPT}', '{RESPONSE_PROBABILITY}', or '{ACCEPTED_OFFER}'."
         )
 
-    expected_credit_cost_rate = out[ADJUSTED_P_DEFAULT] * LOSS_GIVEN_DEFAULT
-
-    unit_margin = (
-        out[OFFERED_INTEREST_RATE]
-        - expected_credit_cost_rate
+    gross_margin_rate = (
+        out[OFFERED_INTEREST_RATE]* 2.0
         - FUNDING_COST
         - SERVICING_COST
-    )
+    ).clip(lower=0.0)
 
-    out[EXPECTED_REVENUE] = (
-        accept_prob
-        * out[LOAN_AMOUNT]
-        * unit_margin.clip(lower=0.0)
-    )
+    loss_severity = out[LOAN_AMOUNT] * LOSS_GIVEN_DEFAULT
 
-    out[EXPECTED_LOSS] = (
-        accept_prob
-        * out[LOAN_AMOUNT]
-        * expected_credit_cost_rate
-    )
+    out[EXPECTED_REVENUE] = out[LOAN_AMOUNT] * gross_margin_rate
+
+    out[EXPECTED_LOSS] = loss_severity
 
     out[EXPECTED_VALUE] = (
         accept_prob
-        * out[LOAN_AMOUNT]
-        * unit_margin
-        * VALUE_SCALING_FACTOR
+        * (
+            (1.0 - out[ADJUSTED_P_DEFAULT]) * out[EXPECTED_REVENUE]
+            - out[ADJUSTED_P_DEFAULT] * out[EXPECTED_LOSS]
+        )
     )
 
     return out

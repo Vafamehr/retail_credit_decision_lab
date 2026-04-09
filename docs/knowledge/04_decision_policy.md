@@ -2,16 +2,17 @@
 
 ## Overview
 
-The Decision Policy layer is responsible for converting model outputs into final business actions.
+The Decision Policy layer converts model outputs into final actions.
 
-Upstream modules produce signals:
-- p_default (risk)
-- p_accept (behavior)
-- expected_value (economics)
+Inputs from upstream:
 
-This layer determines:
+- p_default -> risk  
+- p_accept -> behavior  
+- expected_value -> economics  
 
-approve / decline / manual_review
+Output:
+
+approve / reject / review
 
 ---
 
@@ -23,27 +24,27 @@ This layer is:
 - interpretable  
 - parameter-driven  
 
-It does NOT learn from data.
+It does not learn.
 
-It enforces business rules on top of model outputs.
+It applies business rules on top of model outputs.
 
 ---
 
 ## Why This Layer Exists
 
-Models alone are not enough.
+Model outputs are not decisions.
 
-Example:
+Examples:
 
-- high expected value but very risky → not acceptable  
-- low risk but low acceptance → not useful  
-- profitable but borderline → needs review  
+- high expected value but too risky -> reject  
+- low risk but very low acceptance -> not useful  
+- profitable but borderline -> review  
 
-Decision Policy ensures:
+This layer ensures:
 
 - risk control  
-- business alignment  
-- operational consistency  
+- consistency  
+- alignment with business constraints  
 
 ---
 
@@ -58,15 +59,9 @@ From pricing layer (best_offers.csv):
 
 ---
 
-## Output
+## Outputs
 
-Final decision:
-
-- approve  
-- decline  
-- manual_review  
-
-Additional outputs:
+- decision -> approve / reject / review  
 - decision_reason  
 - policy_segment  
 
@@ -74,61 +69,50 @@ Additional outputs:
 
 ## Core Decision Logic
 
-The decision is governed by constraints:
+Decisions are based on constraints.
 
 ### 1. Risk Constraint
 
-Reject high-risk customers:
-
-p_default > max_p_default → decline
+p_default > threshold -> reject
 
 ---
 
 ### 2. Acceptance Constraint
 
-Avoid unlikely conversions:
-
-p_accept < min_p_accept → decline
+p_accept < threshold -> reject
 
 ---
 
 ### 3. Profitability Constraint
 
-Avoid negative economics:
-
-expected_value < min_expected_value → decline
+expected_value < threshold -> reject
 
 ---
 
 ### 4. Risk Cap (Hard Guardrail)
 
-Even aggressive strategies respect:
-
-p_default > risk_cap → force decline
+p_default > risk_cap -> force reject
 
 ---
 
-### 5. Manual Review Logic
+### 5. Review Zone
 
-For borderline but valuable cases:
+Borderline cases:
 
 - moderate risk  
-- positive expected value  
-- flagged for review  
+- positive value  
 
-These are routed to:
-
-manual_review
+-> review
 
 ---
 
-## Multi-Strategy Framework
+## Strategy Framework
 
-Different parameter sets represent different business strategies:
+Different parameter sets define different behaviors.
 
 ### Conservative
 - low risk tolerance  
-- low approval rate  
+- lower approvals  
 
 ### Balanced
 - moderate thresholds  
@@ -137,126 +121,97 @@ Different parameter sets represent different business strategies:
 - higher approvals  
 - higher risk  
 
-### Aggressive with Risk Cap (Best Performing)
-- pushes approvals  
-- enforces strict upper risk bound  
+### Aggressive with Risk Cap
+- allows growth  
+- enforces strict upper risk limit  
 
 ---
 
 ## Why Multiple Strategies
 
-Real systems do not operate with a single fixed rule.
+There is no single correct policy.
 
-They evaluate trade-offs between:
+Trade-offs exist between:
+
 - growth  
 - risk  
 - profitability  
 
-Strategy comparison enables:
+Multiple strategies allow:
 
+- comparison  
+- tuning  
 - scenario analysis  
-- policy tuning  
-- portfolio optimization  
 
 ---
 
 ## Key Insight
 
-Decision Policy is NOT about prediction.
-
-It is about:
-
-**control**
+This layer is about control, not prediction.
 
 ---
 
-## Separation of Concerns
+## Separation of Roles
 
-This is critical:
-
-| Layer | Responsibility |
-|------|--------|
+| Layer | Role |
+|------|------|
 | Risk Model | estimate default probability |
 | Response Model | estimate acceptance |
-| Pricing | optimize expected value |
-| Decision Policy | enforce business rules |
+| Pricing | compute expected value |
+| Decision Policy | apply rules |
 
 ---
 
-## Limitations of Current Approach
+## Limitation
 
-All decisions rely on:
-
-point estimates
+All decisions are based on point estimates.
 
 Example:
 
 p_default = 0.16  
 expected_value = 1200  
 
-This assumes:
-- predictions are exact  
-- no uncertainty  
-
-This is unrealistic.
+Assumes predictions are exact.
 
 ---
 
-## Motivation for Next Layer (Bayesian)
+## Why This Is Not Enough
 
-The Decision Policy does NOT account for:
-
-- uncertainty in predictions  
-- downside risk  
-- variability in outcomes  
-
-Example issue:
-
-Two customers:
-
-- both EV = 1000  
-
-But:
+Two customers can have the same expected value:
 
 - one stable  
 - one highly uncertain  
 
-Current system treats them equally.
+Policy treats them the same.
 
 ---
 
-## What Bayesian Layer Will Add
+## What Comes Next
 
-The next module introduces:
-
-uncertainty-aware evaluation
+Introduce uncertainty.
 
 Instead of:
 
-EV = fixed  
+expected_value -> single number  
 
 We move to:
 
-EV ~ distribution  
+expected_value -> distribution  
 
-This enables:
+This allows:
 
-- downside risk measurement  
 - probability of loss  
-- tail risk analysis  
+- downside scenarios  
+- tail risk evaluation  
 
 ---
 
 ## Final Takeaway
 
-Decision Policy is:
+Decision Policy turns model outputs into actions using rules.
 
-- rule-based  
-- interpretable  
-- business-aligned  
-
-It converts predictions into actions.
+It is simple, interpretable, and controllable.
 
 But it assumes certainty.
 
-The Bayesian layer extends this by evaluating how reliable those decisions actually are.
+The next layer evaluates how reliable those decisions actually are.

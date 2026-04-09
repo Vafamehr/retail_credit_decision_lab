@@ -1,162 +1,147 @@
-# Banking Decision Systems — Big Picture
+# Banking Decision System — Big Picture
 
-## 1. Core Idea
+## What This System Actually Does
 
-Modern banking systems are not just predictive models.
+This is not a modeling project.
 
-They are decision systems.
+It is a decision system that answers one question:
 
-Data science in banking means turning data into decisions under constraints.
-
----
-
-## 2. The Three-Layer Structure
-
-Every real system follows this structure:
-
-Data → Prediction → Decision
+Should we offer a loan to this customer, and under what terms?
 
 ---
 
-## 3. Layer 1 — Data
+## Core Flow
 
-Raw customer and loan information:
+Customer -> Risk -> Response -> Pricing -> Decision -> Uncertainty Check
 
-- income  
-- credit score  
-- debt-to-income (DTI)  
-- utilization  
-- delinquencies  
+Each step transforms the problem:
 
-Plus engineered features.
-
-This layer answers:
-
-“What do we know about the customer?”
+- Risk -> how likely the customer is to default  
+- Response -> how likely the customer is to accept  
+- Pricing -> whether the offer makes money  
+- Decision -> whether to approve, reject, or review  
+- Bayesian layer -> how stable that decision is  
 
 ---
 
-## 4. Layer 2 — Prediction
+## Why This Structure Matters
 
-Models estimate key probabilities:
+Real systems do not rely on a single model.
 
-Risk Model (PD)  
-Probability that the customer will default  
+Instead:
 
-Response Model  
-Probability that the customer will accept an offer  
-
-Outputs:
-
-P(default), P(accept)
+- models estimate probabilities  
+- business logic turns probabilities into money  
+- policy enforces constraints  
+- uncertainty analysis checks robustness  
 
 ---
 
-## 5. Layer 3 — Decision (Most Important)
+## Key Components
 
-Predictions are not decisions.
+### 1. Risk (PD)
 
-They must be combined with business logic and constraints.
+Estimate probability of default.
 
-Examples:
+This is the primary downside driver.
 
-Approve if:
-- risk is below threshold  
-- and portfolio constraints are satisfied  
-
-Offer selection based on economics:
-
-Decision = f(Risk, Response, Economics, Constraints)
+High PD -> high expected loss.
 
 ---
 
-## 6. What Is Implemented
+### 2. Response (Acceptance)
 
-### Module 01 — Credit Approval
+Estimate probability of accepting an offer.
 
-- predict default probability (PD)  
-- optimize approval threshold under default constraint  
-- produce approve / reject / review decisions  
+This controls volume and revenue.
 
----
-
-### Module 02 — Response Modeling
-
-- simulate multiple loan offers  
-- predict acceptance probability  
-- evaluate using calibration and decile analysis  
+Low acceptance -> even good offers do not convert.
 
 ---
 
-### Module 03 — Pricing Strategy
+### 3. Pricing (Economics)
 
-- adjust risk per offer  
-- compute expected value using margin and loss  
-- select best offer or no-offer option  
+Convert predictions into financial outcomes.
 
----
+Core idea:
 
-## 7. Why This Structure Matters
+- expected revenue -> upside if loan performs  
+- expected loss -> downside if default happens  
+- expected value -> risk-adjusted profit  
 
-Without this structure:
-
-- models are disconnected  
-- decisions are inconsistent  
-- business impact is unclear  
-
-With this structure:
-
-- decisions are consistent and explainable  
-- trade-offs are explicit  
-- system is extensible  
+This is where predictions become decisions.
 
 ---
 
-## 8. What the System Is Doing
+### 4. Decision Policy
 
-The system combines:
+Apply business rules:
 
-- risk (probability of default)  
-- behavior (probability of acceptance)  
-- economics (margin, loss, cost)  
+- minimum profitability  
+- acceptable risk  
+- acceptance thresholds  
 
-to produce:
+Output:
 
-- approval decisions  
-- offer selection  
-- expected value-based targeting  
-
----
-
-## 9. Where This Goes Next
-
-Next step is adding uncertainty-aware decisioning:
-
-Expected Value = f(Risk, Response, Economics, Uncertainty)
-
-This enables:
-
-- probabilistic decision policies  
-- better risk control  
-- Bayesian updates  
-- reinforcement learning integration  
+- APPROVE  
+- REJECT  
+- REVIEW  
 
 ---
 
-## 10. Interview Framing
+### 5. Bayesian Layer (Uncertainty)
 
-You are not presenting:
+Do not trust point estimates blindly.
 
-“I trained models”
+Instead:
 
-You are presenting:
+- treat PD and acceptance as distributions  
+- simulate outcomes  
+- evaluate downside risk  
 
-“I built a structured decision system that separates risk, behavior, and economics to produce consistent, decision-ready outputs aligned with real banking workflows.”
+This answers:
+
+"What if our estimates are slightly wrong?"
 
 ---
 
-## Final Takeaway
+## Key Mental Model
 
-The key shift is:
+Decision = f(Risk, Response, Economics)
 
-From predicting outcomes → to making decisions
+Not:
+
+Decision = f(Model)
+
+---
+
+## What Typically Drives Outcomes
+
+- PD too high -> losses dominate  
+- acceptance too low -> revenue disappears  
+- pricing too weak -> cannot offset risk  
+- strong offers + moderate risk -> best outcomes  
+
+---
+
+## Common Failure Modes
+
+- looking only at expected value (ignoring risk)  
+- ignoring acceptance probability  
+- underpricing risk  
+- over-trusting model outputs  
+
+---
+
+## What Makes This System Strong
+
+- separates prediction from decision  
+- explicitly models economics  
+- includes uncertainty evaluation  
+- produces interpretable outputs  
+
+---
+
+## One-Line Summary
+
+Models predict, pricing translates, policy decides, Bayesian checks stability.
